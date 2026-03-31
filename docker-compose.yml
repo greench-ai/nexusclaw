@@ -1,6 +1,6 @@
 services:
   nexusclaw:
-    image: ghcr.io/greench/nexusclaw:latest
+    image: ghcr.io/greench-ai/nexusclaw:latest
     container_name: nexusclaw
     restart: unless-stopped
     ports:

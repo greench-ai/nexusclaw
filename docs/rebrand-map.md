@@ -116,7 +116,7 @@ const WS_PROTOCOL = 'nexusclaw-gateway-v1'
 ## 9. GitHub Actions
 
 `.github/workflows/ci.yml` and `release.yml`:
-- Update image names: `ghcr.io/openclaw/openclaw` → `ghcr.io/greench/nexusclaw`
+- Update image names: `ghcr.io/openclaw/openclaw` → `ghcr.io/greench-ai/nexusclaw`
 - Update release artifact names
 - Update npm publish name if applicable
 

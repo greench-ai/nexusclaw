@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # NexusClaw — Native Install Script
-# Usage: curl -sSL https://raw.githubusercontent.com/greench/nexusclaw/main/install.sh | bash
+# Usage: curl -sSL https://raw.githubusercontent.com/greench-ai/nexusclaw/main/install.sh | bash
 # Or:    bash install.sh [--daemon] [--docker]
 
 set -euo pipefail
@@ -16,7 +16,7 @@ NC='\033[0m'
 # ─── Config ─────────────────────────────────────────────────────────────────────
 APP_NAME="NexusClaw"
 BIN_NAME="nexusclaw"
-REPO="greench/nexusclaw"
+REPO="greench-ai/nexusclaw"
 CONFIG_DIR="$HOME/.nexusclaw"
 WORKSPACE_DIR="$CONFIG_DIR/workspace"
 SKILLS_DIR="$WORKSPACE_DIR/skills"

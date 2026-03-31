@@ -6,9 +6,9 @@
 ## Step 1 — Fork OpenClaw
 
 ```bash
-# On GitHub: fork https://github.com/openclaw/openclaw → github.com/greench/nexusclaw
+# On GitHub: fork https://github.com/openclaw/openclaw → github.com/greench-ai/nexusclaw
 # Then clone locally:
-git clone https://github.com/greench/nexusclaw.git
+git clone https://github.com/greench-ai/nexusclaw.git
 cd nexusclaw
 ```
 

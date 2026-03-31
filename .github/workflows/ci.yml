@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE:    ghcr.io/greench/nexusclaw
+  IMAGE:    ghcr.io/greench-ai/nexusclaw
 
 jobs:
   # ── Lint & Test ──────────────────────────────────────────────────────────────

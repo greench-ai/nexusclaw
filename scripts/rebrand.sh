@@ -74,7 +74,7 @@ log "Renaming files..."
 
 # ── Root files ────────────────────────────────────────────────────────────────
 log "Patching root files..."
-[ -f "package.json" ]   && sed -i 's/"openclaw"/"nexusclaw"/g; s|openclaw/openclaw|greench/nexusclaw|g' package.json
+[ -f "package.json" ]   && sed -i 's/"openclaw"/"nexusclaw"/g; s|openclaw/openclaw|greench-ai/nexusclaw|g' package.json
 [ -f "pyproject.toml" ] && sed -i 's/openclaw/nexusclaw/g' pyproject.toml
 
 # ── Verify ────────────────────────────────────────────────────────────────────
