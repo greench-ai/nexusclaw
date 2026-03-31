@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusClaw</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:       #0a0d12;
+      --surface:  #111620;
+      --elevated: #1a2030;
+      --hover:    #1e2640;
+      --green:    #00ff88;
+      --purple:   #9b59ff;
+      --orange:   #ff7d3b;
+      --text:     #e8f0fe;
+      --muted:    #8899aa;
+      --border:   #1e2d40;
+      --error:    #ff4466;
+      --font:     'JetBrains Mono', monospace;
+    }
+
+    body {
+      width: 360px;
+      min-height: 480px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--green);
+      letter-spacing: 0.05em;
+    }
+
+    .logo svg { flex-shrink: 0; }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--error);
+      box-shadow: 0 0 6px var(--error);
+      transition: all 0.3s;
+    }
+    .status-dot.connected {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    /* ── Connection Bar ── */
+    .conn-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .conn-bar input {
+      flex: 1;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 11px;
+      outline: none;
+    }
+    .conn-bar input:focus { border-color: var(--green); }
+
+    .btn-connect {
+      padding: 4px 10px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-connect:hover { opacity: 0.85; }
+
+    /* ── Actions ── */
+    .actions {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.18s;
+    }
+    .action-btn:hover {
+      border-color: var(--green);
+      background: var(--hover);
+      color: var(--green);
+    }
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .action-btn .icon {
+      font-size: 16px;
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+    }
+
+    .action-btn .label { flex: 1; }
+    .action-btn .shortcut {
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--elevated);
+      padding: 2px 5px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Message Input ── */
+    .message-area {
+      padding: 0 16px 12px;
+    }
+
+    .message-area textarea {
+      width: 100%;
+      height: 80px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 12px;
+      resize: none;
+      outline: none;
+      line-height: 1.5;
+    }
+    .message-area textarea:focus { border-color: var(--green); }
+    .message-area textarea::placeholder { color: var(--muted); }
+
+    .send-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn-send {
+      flex: 1;
+      padding: 8px;
+      background: var(--green);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-send:hover { opacity: 0.85; }
+    .btn-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-clear {
+      padding: 8px 12px;
+      background: var(--elevated);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-clear:hover { border-color: var(--error); color: var(--error); }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 16px;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all 0.25s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast.ok  { background: var(--green);  color: #000; }
+    .toast.err { background: var(--error);  color: #fff; }
+
+    /* ── Footer ── */
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    footer a {
+      color: var(--green);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <polygon points="10,1 19,6 19,14 10,19 1,14 1,6" stroke="#00ff88" stroke-width="1.5" fill="none"/>
+        <polygon points="10,5 15,8 15,12 10,15 5,12 5,8" fill="#00ff8830" stroke="#00ff88" stroke-width="1"/>
+        <circle cx="10" cy="10" r="2" fill="#00ff88"/>
+      </svg>
+      NEXUSCLAW
+    </div>
+    <div class="status-dot" id="statusDot"></div>
+  </header>
+
+  <div class="conn-bar">
+    <input type="text" id="gatewayUrl" placeholder="http://localhost:19789" />
+    <button class="btn-connect" id="btnConnect">Connect</button>
+  </div>
+
+  <div class="actions">
+    <button class="action-btn" id="btnSendSelection" disabled>
+      <span class="icon">✂️</span>
+      <span class="label">Send selected text</span>
+      <span class="shortcut">⌘⇧X</span>
+    </button>
+    <button class="action-btn" id="btnSendPage" disabled>
+      <span class="icon">📄</span>
+      <span class="label">Send current page</span>
+      <span class="shortcut">⌘⇧P</span>
+    </button>
+    <button class="action-btn" id="btnSendScreenshot" disabled>
+      <span class="icon">📸</span>
+      <span class="label">Send screenshot</span>
+      <span class="shortcut"></span>
+    </button>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="message-area">
+    <textarea id="messageInput" placeholder="Type a message to send to NexusClaw..."></textarea>
+    <div class="send-row">
+      <button class="btn-send" id="btnSend" disabled>Send to Agent</button>
+      <button class="btn-clear" id="btnClear">Clear</button>
+    </div>
+  </div>
+
+  <footer>
+    <span id="connStatus">Disconnected</span>
+    <a href="#" id="openUI">Open WebUI ↗</a>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

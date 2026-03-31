@@ -1,0 +1,28 @@
+{
+  "name": "nexusclaw",
+  "version": "1.0.0",
+  "description": "NexusClaw — Personal AI Gateway. Built on OpenClaw.",
+  "type": "module",
+  "bin": {
+    "nexusclaw": "./nexusclaw.mjs"
+  },
+  "scripts": {
+    "build":        "pnpm -r build",
+    "ui:build":     "pnpm --filter @nexusclaw/ui build",
+    "gateway:watch":"pnpm --filter @nexusclaw/gateway dev",
+    "lint":         "pnpm -r lint",
+    "typecheck":    "pnpm -r typecheck",
+    "test":         "vitest run",
+    "test:unit":    "vitest run --config vitest.unit.config.ts",
+    "openclaw":     "node nexusclaw.mjs"
+  },
+  "keywords": ["ai", "assistant", "gateway", "nexusclaw", "personal-ai"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/greench/nexusclaw.git"
+  },
+  "engines": {
+    "node": ">=22.16.0"
+  }
+}

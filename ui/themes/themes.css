@@ -1,0 +1,353 @@
+/* ============================================================
+   NexusClaw — All 10 Themes
+   Import this file, then set data-theme on <html> or <body>
+   ============================================================ */
+
+/* ─── Shared Base ─────────────────────────────────────────── */
+:root {
+  --font-ui: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --transition: 0.18s ease;
+  --sidebar-width: 260px;
+  --header-height: 52px;
+}
+
+/* ─── 1. Aurora (default) ─────────────────────────────────── */
+[data-theme="aurora"], :root {
+  --bg-base:        #0a0d12;
+  --bg-surface:     #111620;
+  --bg-elevated:    #1a2030;
+  --bg-hover:       #1e2640;
+
+  --accent-primary: #00ff88;
+  --accent-secondary:#9b59ff;
+  --accent-tertiary: #ff7d3b;
+  --accent-muted:   #00ff8840;
+
+  --text-primary:   #e8f0fe;
+  --text-secondary: #8899aa;
+  --text-muted:     #445566;
+  --text-on-accent: #000000;
+
+  --border:         #1e2d40;
+  --border-active:  #00ff88;
+  --shadow:         0 4px 24px rgba(0,255,136,0.08);
+  --glow:           0 0 20px rgba(0,255,136,0.25);
+
+  --scrollbar-thumb:#00ff8840;
+  --scrollbar-track:#111620;
+
+  --status-ok:      #00ff88;
+  --status-warn:    #ff7d3b;
+  --status-error:   #ff4466;
+  --status-info:    #9b59ff;
+
+  --gradient-hero: linear-gradient(135deg, #00ff8820 0%, #9b59ff20 50%, #ff7d3b20 100%);
+}
+
+/* ─── 2. Midnight ─────────────────────────────────────────── */
+[data-theme="midnight"] {
+  --bg-base:        #050a1a;
+  --bg-surface:     #0a1228;
+  --bg-elevated:    #0f1a38;
+  --bg-hover:       #152044;
+
+  --accent-primary: #00d4ff;
+  --accent-secondary:#4a9eff;
+  --accent-tertiary: #7c3aed;
+  --accent-muted:   #00d4ff30;
+
+  --text-primary:   #e0f0ff;
+  --text-secondary: #6a8caa;
+  --text-muted:     #334455;
+  --text-on-accent: #000000;
+
+  --border:         #1a2a4a;
+  --border-active:  #00d4ff;
+  --shadow:         0 4px 24px rgba(0,212,255,0.08);
+  --glow:           0 0 20px rgba(0,212,255,0.2);
+
+  --scrollbar-thumb:#00d4ff40;
+  --scrollbar-track:#0a1228;
+
+  --status-ok:      #00d4ff;
+  --status-warn:    #f59e0b;
+  --status-error:   #ef4444;
+  --status-info:    #4a9eff;
+
+  --gradient-hero: linear-gradient(135deg, #00d4ff15 0%, #4a9eff15 50%, #7c3aed15 100%);
+}
+
+/* ─── 3. Obsidian ─────────────────────────────────────────── */
+[data-theme="obsidian"] {
+  --bg-base:        #080808;
+  --bg-surface:     #111111;
+  --bg-elevated:    #1a1a1a;
+  --bg-hover:       #222222;
+
+  --accent-primary: #ff2244;
+  --accent-secondary:#cccccc;
+  --accent-tertiary: #aa4422;
+  --accent-muted:   #ff224430;
+
+  --text-primary:   #f0f0f0;
+  --text-secondary: #888888;
+  --text-muted:     #444444;
+  --text-on-accent: #ffffff;
+
+  --border:         #2a2a2a;
+  --border-active:  #ff2244;
+  --shadow:         0 4px 24px rgba(255,34,68,0.1);
+  --glow:           0 0 20px rgba(255,34,68,0.2);
+
+  --scrollbar-thumb:#ff224440;
+  --scrollbar-track:#111111;
+
+  --status-ok:      #44cc88;
+  --status-warn:    #ffaa00;
+  --status-error:   #ff2244;
+  --status-info:    #aaaacc;
+
+  --gradient-hero: linear-gradient(135deg, #ff224410 0%, #aa442210 50%, #22222210 100%);
+}
+
+/* ─── 4. Arctic ──────────────────────────────────────────── */
+[data-theme="arctic"] {
+  --bg-base:        #f5f8ff;
+  --bg-surface:     #ffffff;
+  --bg-elevated:    #edf2ff;
+  --bg-hover:       #e0eaff;
+
+  --accent-primary: #0066ff;
+  --accent-secondary:#00aacc;
+  --accent-tertiary: #6633ff;
+  --accent-muted:   #0066ff20;
+
+  --text-primary:   #0a0f1e;
+  --text-secondary: #445577;
+  --text-muted:     #99aabb;
+  --text-on-accent: #ffffff;
+
+  --border:         #d0daf0;
+  --border-active:  #0066ff;
+  --shadow:         0 4px 24px rgba(0,102,255,0.08);
+  --glow:           0 0 20px rgba(0,102,255,0.15);
+
+  --scrollbar-thumb:#0066ff40;
+  --scrollbar-track:#f5f8ff;
+
+  --status-ok:      #00aa66;
+  --status-warn:    #ff9900;
+  --status-error:   #ee2244;
+  --status-info:    #0066ff;
+
+  --gradient-hero: linear-gradient(135deg, #0066ff10 0%, #00aacc10 50%, #6633ff10 100%);
+}
+
+/* ─── 5. Ember ───────────────────────────────────────────── */
+[data-theme="ember"] {
+  --bg-base:        #0d0900;
+  --bg-surface:     #1a1000;
+  --bg-elevated:    #261800;
+  --bg-hover:       #331f00;
+
+  --accent-primary: #ff8c00;
+  --accent-secondary:#ff4500;
+  --accent-tertiary: #ffcc00;
+  --accent-muted:   #ff8c0030;
+
+  --text-primary:   #fff5e0;
+  --text-secondary: #aa8855;
+  --text-muted:     #553300;
+  --text-on-accent: #000000;
+
+  --border:         #2e1a00;
+  --border-active:  #ff8c00;
+  --shadow:         0 4px 24px rgba(255,140,0,0.12);
+  --glow:           0 0 20px rgba(255,140,0,0.3);
+
+  --scrollbar-thumb:#ff8c0040;
+  --scrollbar-track:#1a1000;
+
+  --status-ok:      #44cc66;
+  --status-warn:    #ffcc00;
+  --status-error:   #ff4422;
+  --status-info:    #ff8c00;
+
+  --gradient-hero: linear-gradient(135deg, #ff8c0020 0%, #ff450020 50%, #ffcc0010 100%);
+}
+
+/* ─── 6. Matrix ──────────────────────────────────────────── */
+[data-theme="matrix"] {
+  --bg-base:        #000000;
+  --bg-surface:     #000f00;
+  --bg-elevated:    #001500;
+  --bg-hover:       #002000;
+
+  --accent-primary: #00ff41;
+  --accent-secondary:#00cc33;
+  --accent-tertiary: #008f11;
+  --accent-muted:   #00ff4120;
+
+  --text-primary:   #00ff41;
+  --text-secondary: #00aa28;
+  --text-muted:     #005510;
+  --text-on-accent: #000000;
+
+  --border:         #003300;
+  --border-active:  #00ff41;
+  --shadow:         0 4px 24px rgba(0,255,65,0.15);
+  --glow:           0 0 30px rgba(0,255,65,0.4);
+
+  --font-ui:        'Courier New', 'Lucida Console', monospace;
+  --font-body:      'Courier New', monospace;
+
+  --scrollbar-thumb:#00ff4140;
+  --scrollbar-track:#000f00;
+
+  --status-ok:      #00ff41;
+  --status-warn:    #ffff00;
+  --status-error:   #ff0000;
+  --status-info:    #00ccff;
+
+  --gradient-hero: linear-gradient(180deg, #00ff4108 0%, #00000000 100%);
+}
+
+/* ─── 7. Sakura ──────────────────────────────────────────── */
+[data-theme="sakura"] {
+  --bg-base:        #fff5f7;
+  --bg-surface:     #ffffff;
+  --bg-elevated:    #ffe8ed;
+  --bg-hover:       #ffd6de;
+
+  --accent-primary: #e05573;
+  --accent-secondary:#f48fb1;
+  --accent-tertiary: #c2185b;
+  --accent-muted:   #e0557320;
+
+  --text-primary:   #2d0a14;
+  --text-secondary: #8b4a5a;
+  --text-muted:     #d4a0aa;
+  --text-on-accent: #ffffff;
+
+  --border:         #f0c0cc;
+  --border-active:  #e05573;
+  --shadow:         0 4px 24px rgba(224,85,115,0.1);
+  --glow:           0 0 20px rgba(224,85,115,0.2);
+
+  --font-body:      'Georgia', serif;
+
+  --scrollbar-thumb:#e0557340;
+  --scrollbar-track:#fff5f7;
+
+  --status-ok:      #4caf50;
+  --status-warn:    #ff9800;
+  --status-error:   #c62828;
+  --status-info:    #e05573;
+
+  --gradient-hero: linear-gradient(135deg, #e0557315 0%, #f48fb115 50%, #c2185b10 100%);
+}
+
+/* ─── 8. Void ────────────────────────────────────────────── */
+[data-theme="void"] {
+  --bg-base:        #04000d;
+  --bg-surface:     #080018;
+  --bg-elevated:    #0e0026;
+  --bg-hover:       #160035;
+
+  --accent-primary: #bb44ff;
+  --accent-secondary:#7700ff;
+  --accent-tertiary: #ff44bb;
+  --accent-muted:   #bb44ff25;
+
+  --text-primary:   #f0e0ff;
+  --text-secondary: #8855aa;
+  --text-muted:     #441166;
+  --text-on-accent: #ffffff;
+
+  --border:         #1a0044;
+  --border-active:  #bb44ff;
+  --shadow:         0 4px 24px rgba(187,68,255,0.12);
+  --glow:           0 0 30px rgba(187,68,255,0.35);
+
+  --scrollbar-thumb:#bb44ff40;
+  --scrollbar-track:#080018;
+
+  --status-ok:      #44ffbb;
+  --status-warn:    #ffaa44;
+  --status-error:   #ff4466;
+  --status-info:    #bb44ff;
+
+  --gradient-hero: linear-gradient(135deg, #bb44ff18 0%, #7700ff18 50%, #ff44bb15 100%);
+}
+
+/* ─── 9. Solar ───────────────────────────────────────────── */
+[data-theme="solar"] {
+  --bg-base:        #fafaf5;
+  --bg-surface:     #ffffff;
+  --bg-elevated:    #f5f0e0;
+  --bg-hover:       #ede8d0;
+
+  --accent-primary: #c8920a;
+  --accent-secondary:#e8a820;
+  --accent-tertiary: #9a6800;
+  --accent-muted:   #c8920a20;
+
+  --text-primary:   #1a1200;
+  --text-secondary: #6a5200;
+  --text-muted:     #bba060;
+  --text-on-accent: #ffffff;
+
+  --border:         #e0d4a0;
+  --border-active:  #c8920a;
+  --shadow:         0 4px 24px rgba(200,146,10,0.1);
+  --glow:           0 0 20px rgba(200,146,10,0.2);
+
+  --font-body:      'Palatino Linotype', 'Book Antiqua', serif;
+
+  --scrollbar-thumb:#c8920a40;
+  --scrollbar-track:#fafaf5;
+
+  --status-ok:      #2a8a44;
+  --status-warn:    #e8a820;
+  --status-error:   #cc3322;
+  --status-info:    #c8920a;
+
+  --gradient-hero: linear-gradient(135deg, #c8920a15 0%, #e8a82015 50%, #9a680010 100%);
+}
+
+/* ─── 10. Stealth ────────────────────────────────────────── */
+[data-theme="stealth"] {
+  --bg-base:        #0f0f0f;
+  --bg-surface:     #171717;
+  --bg-elevated:    #202020;
+  --bg-hover:       #2a2a2a;
+
+  --accent-primary: #777777;
+  --accent-secondary:#999999;
+  --accent-tertiary: #555555;
+  --accent-muted:   #77777720;
+
+  --text-primary:   #dddddd;
+  --text-secondary: #888888;
+  --text-muted:     #444444;
+  --text-on-accent: #ffffff;
+
+  --border:         #2e2e2e;
+  --border-active:  #aaaaaa;
+  --shadow:         0 4px 24px rgba(0,0,0,0.4);
+  --glow:           none;
+
+  --scrollbar-thumb:#44444480;
+  --scrollbar-track:#171717;
+
+  --status-ok:      #66aa66;
+  --status-warn:    #aaaa44;
+  --status-error:   #aa4444;
+  --status-info:    #6688aa;
+
+  --gradient-hero: linear-gradient(135deg, #ffffff08 0%, #00000000 100%);
+}
