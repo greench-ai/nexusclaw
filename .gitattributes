@@ -1,0 +1,2 @@
+*.Identifier export-ignore
+**/*:Zone.Identifier export-ignore
