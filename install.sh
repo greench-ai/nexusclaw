@@ -1,128 +1,89 @@
 #!/bin/bash
+# NexusClaw One-Line Installer
+# curl -s https://raw.githubusercontent.com/greench-ai/nexusclaw/main/install.sh | bash
 set -e
 
-echo "
-╔══════════════════════════════════════════════════════════╗
-║                    NEXUSCLAW                           ║
-║         Your framework. Your rules.                   ║
-║              No restrictions.                          ║
-╚══════════════════════════════════════════════════════════╝
-"
+NEXUS_DIR="${NEXUS_DIR:-$HOME/nexusclaw}"
+echo "⚡ NexusClaw Installer"
+echo "====================="
+echo "Installing to: $NEXUS_DIR"
 
-NEXUS_DIR="${HOME}/.nexusclaw"
-mkdir -p "${NEXUS_DIR}"
-
-# Color
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-step() { echo -e "${GREEN}[+]${NC} $1"; }
-warn() { echo -e "${YELLOW}[!]${NC} $1"; }
-error() { echo -e "${RED}[✗]${NC} $1"; }
-
-# Detect OS
-OS="$(uname -s)"
-ARCH="$(uname -m)"
-step "Detected: ${OS} (${ARCH})"
-
-# Check Python
-if ! command -v python3 &> /dev/null; then
-    error "Python 3 not found. Install from python.org or 'brew install python3'"
-    exit 1
+# 1. Clone or pull
+if [ -d "$NEXUS_DIR/.git" ]; then
+    echo "📦 Updating existing installation..."
+    cd "$NEXUS_DIR" && git pull origin main
+else
+    echo "📦 Cloning NexusClaw..."
+    git clone https://github.com/greench-ai/nexusclaw.git "$NEXUS_DIR"
+    cd "$NEXUS_DIR"
 fi
-step "Python 3 found: $(python3 --version)"
 
-# Check Docker
+# 2. Install Python dependencies
+echo "🐍 Installing Python dependencies..."
+pip3 install fastapi uvicorn python-multipart pydantic aiohttp python-jose[cryptography] passlib bcrypt psutil --quiet
+
+# 3. Install Playwright (optional, for browser automation)
+echo "🌐 Installing Playwright (optional)..."
+pip3 install playwright --quiet 2>/dev/null || true
+python3 -m playwright install chromium 2>/dev/null || true
+
+# 4. Check Docker
 if command -v docker &> /dev/null; then
-    DOCKER=1
-    step "Docker found — Qdrant + Redis available"
+    echo "🐳 Docker found"
 else
-    DOCKER=0
-    warn "Docker not found — skipping Qdrant/Redis"
+    echo "⚠️  Docker not found. Install from https://docker.com"
 fi
 
-# Check Ollama
+# 5. Check Ollama
 if command -v ollama &> /dev/null; then
-    OLLAMA=1
-    step "Ollama found — free local models available"
+    echo "🤖 Ollama found"
+    OLLAMA_MODELS=$(curl -s http://localhost:11434/api/tags 2>/dev/null | python3 -c "import json,sys; d=json.load(sys.stdin); print(len(d.get('models',[])))" 2>/dev/null || echo "0")
+    echo "   Models installed: $OLLAMA_MODELS"
+    if [ "$OLLAMA_MODELS" = "0" ]; then
+        echo "   Run: ollama pull llama3.2"
+    fi
 else
-    OLLAMA=0
-    warn "Ollama not found — run 'curl -fsSL https://ollama.com/install.sh | bash'"
+    echo "⚠️  Ollama not found. Install from https://ollama.com"
+    echo "   Then: ollama pull llama3.2"
 fi
 
-# Create config
-step "Creating configuration..."
-cat > "${NEXUS_DIR}/config.json" << 'EOF'
-{
-  "version": "0.11.0",
-  "workspace": "~/.nexusclaw",
-  "api": {
-    "host": "0.0.0.0",
-    "port": 8080
-  },
-  "openroom": {
-    "host": "0.0.0.0",
-    "port": 51234
-  },
-  "providers": {
-    "ollama": {
-      "url": "http://localhost:11434",
-      "default_model": "llama3.2"
-    }
-  },
-  "memory": {
-    "mode": "hybrid",
-    "qdrant_url": "http://localhost:6333"
-  }
-}
-EOF
+# 6. Start services
+echo "🚀 Starting services..."
+cd "$NEXUS_DIR"
 
-# Copy source
-step "Installing NexusClaw source..."
-cp -r "$(dirname "$0")/src" "${NEXUS_DIR}/"
-cp -r "$(dirname "$0")/apps" "${NEXUS_DIR}/"
-
-# Create symlinks
-step "Creating command: nexusclaw"
-if [ -d "${HOME}/bin" ]; then
-    ln -sf "${NEXUS_DIR}/src/cli/main.py" "${HOME}/bin/nexusclaw"
-    chmod +x "${HOME}/bin/nexusclaw"
-elif [ -d "/usr/local/bin" ]; then
-    sudo ln -sf "${NEXUS_DIR}/src/cli/main.py" "/usr/local/bin/nexusclaw"
-    chmod +x "/usr/local/bin/nexusclaw"
+# Start API in background
+if ! curl -s http://localhost:8080/health &>/dev/null; then
+    nohup python3 apps/api/main.py > /tmp/nexusclaw_api.log 2>&1 &
+    echo "   API started on port 8080"
 else
-    echo "Add to PATH: export PATH=${NEXUS_DIR}/src/cli:\$PATH"
+    echo "   API already running on port 8080"
 fi
 
-# Docker services
-if [ "${DOCKER}" = 1 ]; then
-    step "Starting Docker services (Qdrant, Redis)..."
-    docker run -d --name nexus-qdrant \
-        -p 6333:6333 \
-        -p 6334:6334 \
-        qdrant/qdrant > /dev/null 2>&1 || true
-    
-    docker run -d --name nexus-redis \
-        -p 6379:6379 \
-        redis:7-alpine > /dev/null 2>&1 || true
-    
-    step "Docker services started"
+# Start OpenRoom in background
+if ! curl -s http://localhost:19789/health &>/dev/null; then
+    nohup python3 apps/web/server.py > /tmp/nexusclaw_openroom.log 2>&1 &
+    echo "   OpenRoom started on port 19789"
+else
+    echo "   OpenRoom already running on port 19789"
 fi
 
-# Final message
+sleep 2
+
+# 7. Verify
 echo ""
-echo -e "${GREEN}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║              INSTALLATION COMPLETE                       ║${NC}"
-echo -e "${GREEN}╚══════════════════════════════════════════════════════════╝${NC}"
+echo "====================="
+if curl -s http://localhost:8080/health &>/dev/null; then
+    echo "✅ API:        http://localhost:8080"
+else
+    echo "❌ API failed to start. Check /tmp/nexusclaw_api.log"
+fi
+if curl -s http://localhost:19789/health &>/dev/null; then
+    echo "✅ OpenRoom:   http://localhost:19789"
+else
+    echo "❌ OpenRoom failed to start. Check /tmp/nexusclaw_openroom.log"
+fi
 echo ""
-echo "  Next steps:"
-echo "  1. nexusclaw setup          # First-time configuration"
-echo "  2. nexusclaw chat          # Start chatting"
-echo "  3. python3 apps/api/main.py # Start API server"
-echo "  4. python3 apps/web/server.py  # Start web UI"
+echo "📖 Docs: https://github.com/greench-ai/nexusclaw"
+echo "💬 Start chatting at http://localhost:19789"
 echo ""
-echo "  Or run everything with Docker:"
-echo "  docker-compose up"
-echo ""
+echo "To update later: cd $NEXUS_DIR && git pull"
