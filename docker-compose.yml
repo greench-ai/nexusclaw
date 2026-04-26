@@ -1,0 +1,39 @@
+services:
+  nexusclaw:
+    image: ghcr.io/greench-ai/nexusclaw:latest
+    container_name: nexusclaw
+    restart: unless-stopped
+    ports:
+      - "${NEXUSCLAW_PORT:-19789}:19789"
+    volumes:
+      - nexusclaw-config:/root/.nexusclaw
+      - nexusclaw-library:/root/nexusclaw/library
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - NEXUSCLAW_CONFIG=/root/.nexusclaw/nexusclaw.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19789/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      - "com.nexusclaw.service=gateway"
+
+  # Optional: Chromium for browser tool
+  nexusclaw-chrome:
+    image: browserless/chromium:latest
+    container_name: nexusclaw-chrome
+    restart: unless-stopped
+    profiles: ["browser"]
+    environment:
+      - MAX_CONCURRENT_SESSIONS=5
+      - CONNECTION_TIMEOUT=60000
+
+volumes:
+  nexusclaw-config:
+    name: nexusclaw-config
+  nexusclaw-library:
+    name: nexusclaw-library

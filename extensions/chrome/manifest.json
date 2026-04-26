@@ -1,0 +1,75 @@
+{
+  "manifest_version": 3,
+  "name": "NexusClaw",
+  "short_name": "NexusClaw",
+  "description": "Send text, pages, and commands directly to your NexusClaw gateway from any browser tab.",
+  "version": "1.0.0",
+
+  "icons": {
+    "16":  "icons/icon16.png",
+    "32":  "icons/icon32.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "32":  "icons/icon32.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "NexusClaw"
+  },
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "contextMenus",
+    "notifications"
+  ],
+
+  "host_permissions": [
+    "http://localhost:19789/*",
+    "http://127.0.0.1:19789/*"
+  ],
+
+  "commands": {
+    "send-selection": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+X",
+        "mac": "Command+Shift+X"
+      },
+      "description": "Send selected text to NexusClaw"
+    },
+    "send-page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+P",
+        "mac": "Command+Shift+P"
+      },
+      "description": "Send current page to NexusClaw"
+    },
+    "open-popup": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+N",
+        "mac": "Command+Shift+N"
+      },
+      "description": "Open NexusClaw popup"
+    }
+  }
+}

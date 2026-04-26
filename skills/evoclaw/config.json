@@ -1,0 +1,18 @@
+{
+  "governance": "supervised",
+  "evolution": {
+    "minConfidence": 0.75,
+    "maxDeltaPerCycle": 3,
+    "requireJustification": true
+  },
+  "memory": {
+    "retentionDays": {
+      "routine": 7,
+      "notable": 90,
+      "pivotal": -1
+    }
+  },
+  "feeds": [],
+  "heartbeatLog": true,
+  "timelineEnabled": true
+}

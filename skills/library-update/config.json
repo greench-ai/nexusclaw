@@ -1,0 +1,8 @@
+{
+  "libraryPath": "~/nexusclaw/library",
+  "sessionRetentionDays": 30,
+  "pruneEnabled": true,
+  "verbosity": "normal",
+  "gitAutoCommit": false,
+  "gitCommitMessage": "chore: library auto-update"
+}

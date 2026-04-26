@@ -1,112 +1,159 @@
-# NexusClaw
+# NexusClaw — Personal AI Gateway
 
-**Your framework. Your rules. No restrictions.**
+> Built on [OpenClaw](https://github.com/openclaw/openclaw) · MIT License
 
-A unified AI agent framework combining the best of OpenClaw, EvoClaw, Claude, Perplexity, AnythingLLM, OpenWebUI, OpenRoom, and Space Agent — into one freedom-first platform.
-
-> Public version. GreenchClaw = private variant with personal customizations.
+NexusClaw is a private, full-featured fork of OpenClaw — rebranded, extended, and packaged for personal use across any machine.
 
 ---
 
-## Features
+## What's Different from OpenClaw
 
-### 🤖 Providers (No Lock-in)
-- **Local**: Ollama (free, private, runs on any machine)
-- **Cloud**: OpenAI GPT-4o/o1/o3, Anthropic Claude 3.5/3.7, Minimaxi M2.7-highspeed
-- **Aggregator**: OpenRouter (100+ models via single API)
-- **Custom**: Any OpenAI-compatible endpoint
-
-### 💬 Channels
-- **Web**: OpenRoom browser UI (streaming, code highlighting, math rendering, voice input)
-- **CLI**: Terminal/SSH
-- **Telegram**: Chat from anywhere
-- **Discord**: Server/community bot
-- **Slack**: Team workspace
-
-### 🧠 Memory
-- **Persistent**: Qdrant vector DB — learns forever across sessions
-- **Session**: Zero persistence — maximum privacy
-- **Hybrid**: Remember important, forget rest
-
-### 🌀 Self-Evolution (EvoClaw)
-- Heartbeat every 5 minutes
-- Reflection on pivotal experiences
-- Research cycle (30-min keyword research)
-- RSS passive information stream
-
-### 🔍 Tools
-- **Web Search**: Perplexity-style with citations
-- **Code Execution**: Python/JS in sandbox
-- **File Ops**: Read, write, browse filesystem
-- **RAG**: Document Q&A over your files (PDF, DOCX, TXT, HTML)
-- **API**: Call any external API
-
-### 🎭 Soul System
-- Blank, Assistant, Coder, Researcher templates
-- Write your own identity
-- Hot-swap souls mid-conversation
-
-### 🛡️ Safety (Autonomy)
-- Autonomous goals with task planning
-- Approval workflow for sensitive actions
-- Kill switch to pause all active goals
+| Feature | OpenClaw | NexusClaw |
+|---------|----------|-----------|
+| EvoClaw soul evolution | Manual install | **Bundled, auto-configured** |
+| EvoClaw heartbeat | Manual cron | **Every 15 min, pre-wired** |
+| Memory consolidation | Not included | **Every 30 min, pre-wired** |
+| Library/docs cron | Not included | **Hourly, pre-wired** |
+| UI themes | 1 default | **10 themes, live switchable** |
+| Claude preview panel | Not included | **Bundled** |
+| Chrome extension | Not included | **Bundled** |
+| Image generation skill | Not included | **ComfyUI / A1111 / Replicate** |
+| Web search skill | Not included | **Bundled (Brave / DDG)** |
+| Install script | `npm install -g openclaw` | **`install.sh` — one command** |
 
 ---
 
 ## Quick Start
 
+### Native (recommended)
+
 ```bash
-# 1. Clone
-git clone https://github.com/greench-ai/nexusclaw.git
+# Clone and install
+git clone https://github.com/greench/nexusclaw.git
 cd nexusclaw
+bash install.sh --daemon
 
-# 2. Setup (one-time wizard)
-python3 src/onboard/wizard.py
+# Start
+nexusclaw gateway
+```
 
-# 3. Start API
-python3 apps/api/main.py
+### One-liner (from release)
 
-# 4. Open web UI
-open apps/web/index.html
+```bash
+curl -sSL https://raw.githubusercontent.com/greench/nexusclaw/main/install.sh | bash
+nexusclaw onboard --install-daemon
+```
 
-# Or use CLI
-python3 src/cli/main.py chat
+### Docker
+
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+docker compose up -d
 ```
 
 ---
 
-## Architecture
+## Config
+
+Config lives at `~/.nexusclaw/nexusclaw.json`.
+
+```json
+{
+  "agent": { "model": "anthropic/claude-opus-4-6" },
+  "gateway": { "port": 19789 },
+  "cron": [
+    { "schedule": "*/15 * * * *", "skill": "evoclaw/heartbeat" },
+    { "schedule": "*/30 * * * *", "skill": "memory-save/run" },
+    { "schedule": "0 * * * *",    "skill": "library-update/run" }
+  ],
+  "ui": { "theme": "aurora", "claudePreview": true }
+}
+```
+
+Full config reference: [OpenClaw docs](https://docs.openclaw.ai/gateway/configuration) (same keys, replace `~/.openclaw` with `~/.nexusclaw`)
+
+---
+
+## Bundled Skills
+
+| Skill | Trigger | What it does |
+|-------|---------|-------------|
+| `evoclaw` | Every 15 min | Soul evolution + memory classification |
+| `memory-save` | Every 30 min | Session context consolidation |
+| `library-update` | Every hour | Keeps `~/nexusclaw/library/` updated |
+| `image-create` | On demand | Image generation via ComfyUI / A1111 |
+| `web-search` | Auto / on demand | Real-time web search |
+
+---
+
+## UI Themes
+
+Switch themes from the header or in config:
+
+| ID | Name | Style |
+|----|------|-------|
+| `aurora` | Aurora | Default — green/purple/orange on dark |
+| `midnight` | Midnight | Navy/cyan deep space |
+| `obsidian` | Obsidian | Black/red/silver |
+| `arctic` | Arctic | Light — white/ice blue |
+| `ember` | Ember | Dark amber glow |
+| `matrix` | Matrix | Terminal green on black |
+| `sakura` | Sakura | Light — pink/rose |
+| `void` | Void | Pure dark violet |
+| `solar` | Solar | Light — warm gold |
+| `stealth` | Stealth | Grey/charcoal minimal |
+
+---
+
+## Chrome Extension
+
+Located in `extensions/chrome/`. Load as unpacked extension:
+
+1. Open `chrome://extensions`
+2. Enable Developer Mode
+3. Click "Load unpacked"
+4. Select `extensions/chrome/`
+
+Keyboard shortcuts:
+- `Ctrl+Shift+X` — Send selected text to agent
+- `Ctrl+Shift+P` — Send current page to agent
+- `Ctrl+Shift+N` — Open NexusClaw popup
+
+---
+
+## Library
+
+All documentation auto-maintained at `~/nexusclaw/library/`:
 
 ```
-nexusclaw/
-├── src/
-│   ├── cli/           # nexusclaw setup / chat / shell
-│   ├── onboard/       # OpenClaw-style setup wizard
-│   ├── soul/         # Identity engine (user-defined personality)
-│   ├── providers/    # Ollama, OpenAI, Anthropic, Minimaxi, Custom
-│   └── web/          # OpenRoom UI module
-├── apps/
-│   ├── api/          # FastAPI: auth, chat, files, goals, kill switch
-│   ├── worker/       # File indexer: PDF, DOCX, HTML, TXT → chunks → Qdrant
-│   └── model-gateway/ # Unified streaming gateway for all providers
-├── packages/          # Shared libraries
-└── apps/web/         # OpenRoom browser UI
+~/nexusclaw/library/
+├── README.md          ← Auto-generated index
+├── system/            ← Config, skills, cron history
+├── sessions/          ← Session logs by date
+├── memory/            ← Persistent facts and tasks
+├── agents/            ← SOUL.md copy + evolution log
+└── skills/            ← Per-skill activity logs
 ```
 
 ---
 
-## Design Documents
+## Rebrand from OpenClaw
 
-21 design iterations in `/home/greench/New Proj/`:
-- `1st` — Product definition (4 pillars)
-- `5th` — GitHub setup + .gitignore
-- `10th` — v0.6: Parsers (PDF, DOCX, HTML) + retry queue + provider-fallback streaming
-- `15th` — v0.8: Prisma models (AutonomousGoal, Task, Event, ApprovalRequest, Policy)
-- `20th` — Continuity checklist: Phase A-E (stabilize → validate core → validate autonomy → safety → done)
-- `21st` — One-shot QA pack (curl sequence for end-to-end testing)
+See [`docs/rebrand-map.md`](docs/rebrand-map.md) for a complete file-by-file guide.
+
+---
+
+## Machines
+
+This instance configured for `greench-ai` network:
+
+- `freaked` — 192.168.178.90 (Docker, primary services)
+- `Greench` — 192.168.178.76 (Win11, ComfyUI at :8188)
+- `Aspire` — 192.168.178.96 (Naruto, Docker, MCP)
 
 ---
 
 ## License
 
-MIT
+MIT — same as OpenClaw upstream.

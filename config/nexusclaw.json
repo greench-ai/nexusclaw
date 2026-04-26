@@ -1,0 +1,64 @@
+{
+  "agent": {
+    "model": "anthropic/claude-opus-4-6",
+    "workspace": "~/.nexusclaw/workspace",
+    "thinkingLevel": "medium"
+  },
+
+  "gateway": {
+    "port": 19789,
+    "bind": "loopback",
+    "mode": "personal"
+  },
+
+  "cron": [
+    {
+      "schedule": "*/15 * * * *",
+      "skill": "evoclaw/heartbeat",
+      "description": "EvoClaw soul evolution heartbeat — reflects on recent context and evolves SOUL.md",
+      "enabled": true
+    },
+    {
+      "schedule": "*/30 * * * *",
+      "skill": "memory-save/run",
+      "description": "Memory consolidation — classifies and saves session experiences",
+      "enabled": true
+    },
+    {
+      "schedule": "0 * * * *",
+      "skill": "library-update/run",
+      "description": "Library documentation — keeps ~/nexusclaw/library/ updated with activity logs",
+      "enabled": true
+    }
+  ],
+
+  "skills": {
+    "autoLoad": [
+      "evoclaw",
+      "memory-save",
+      "library-update",
+      "image-create",
+      "web-search"
+    ]
+  },
+
+  "ui": {
+    "theme": "aurora",
+    "claudePreview": true,
+    "chromeExtensionEnabled": true,
+    "themeSwitcherVisible": true
+  },
+
+  "browser": {
+    "enabled": true,
+    "color": "#00ff88"
+  },
+
+  "agents": {
+    "defaults": {
+      "sandbox": {
+        "mode": "off"
+      }
+    }
+  }
+}

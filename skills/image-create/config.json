@@ -1,0 +1,16 @@
+{
+  "backend": "auto",
+  "defaultSize": "1024x1024",
+  "defaultSteps": 20,
+  "defaultCfg": 7,
+  "saveImages": true,
+  "imageOutputPath": "~/nexusclaw/library/images",
+  "comfyui": {
+    "checkpointModel": "auto",
+    "sampler": "euler",
+    "scheduler": "normal"
+  },
+  "a1111": {
+    "samplerName": "Euler a"
+  }
+}
