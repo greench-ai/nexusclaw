@@ -3,366 +3,370 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NexusClaw OpenRoom</title>
+<title>NexusClaw — Your framework. Your rules.</title>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* === RESET & VARS === */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #07070d;
-  --surface: #0f0f18;
-  --surface2: #16161f;
-  --border: #1e1e2e;
-  --border2: #2a2a3e;
-  --text: #e4e4ef;
-  --text2: #8888a0;
-  --accent: #8b7cf6;
-  --accent-dim: rgba(139,124,246,0.15);
-  --accent-glow: rgba(139,124,246,0.3);
-  --success: #4ade80;
-  --danger: #f87171;
-  --warning: #fbbf24;
-  --code-bg: #0a0a12;
-  --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --mono: 'Cascadia Code', 'JetBrains Mono', 'SF Mono', monospace;
+  --bg: #000;
+  --sidebar-bg: #111;
+  --sidebar-border: #1a1a1a;
+  --surface: #161616;
+  --surface-hover: #1e1e1e;
+  --border: #2a2a2a;
+  --text: #fff;
+  --text-2: #888;
+  --text-3: #555;
+  --accent: #7c3aed;
+  --accent-light: #a78bfa;
+  --accent-dim: rgba(124, 58, 237, 0.12);
+  --radius: 10px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --sidebar-w: 260px;
 }
+
+html, body { height: 100%; overflow: hidden; }
 
 body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
-  height: 100dvh;
+  display: flex;
+}
+
+/* === SIDEBAR === */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
   display: flex;
   flex-direction: column;
+  height: 100dvh;
+}
+
+.sidebar-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--sidebar-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-logo {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  flex: 1;
+}
+
+.sidebar-logo span {
+  font-size: 11px;
+  display: block;
+  font-weight: 400;
+  -webkit-text-fill-color: var(--text-3);
+  letter-spacing: 0.5px;
+}
+
+.new-chat-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.new-chat-btn:hover { background: var(--accent-light); }
+
+.session-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.session-list::-webkit-scrollbar { width: 4px; }
+.session-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.session-item {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+  transition: background 0.1s, color 0.1s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-item:hover { background: var(--surface-hover); color: var(--text); }
+.session-item.active { background: var(--accent-dim); color: var(--accent-light); }
+.session-item .s-icon { font-size: 15px; flex-shrink: 0; }
+.session-item .s-title { overflow: hidden; text-overflow: ellipsis; }
+
+.sidebar-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--sidebar-border);
+  display: flex;
+  gap: 8px;
+}
+
+.sidebar-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.15s;
+}
+
+.sidebar-btn:hover { background: var(--surface-hover); color: var(--text); }
+
+/* === MAIN CONTENT === */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
   overflow: hidden;
 }
 
-/* === HEADER === */
-.header {
+/* === TOPBAR === */
+.topbar {
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  padding: 14px 20px;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  gap: 16px;
-  flex-shrink: 0;
-  -webkit-app-region: drag;
+  gap: 12px;
+  min-height: 56px;
 }
 
-.header .logo {
-  font-size: 22px;
-  -webkit-app-region: no-drag;
-}
-
-.header .title-input {
+.chat-title {
   flex: 1;
-  background: transparent;
-  border: none;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text);
-  font-size: 15px;
-  font-family: var(--font);
+  border: none;
+  background: transparent;
   outline: none;
-  -webkit-app-region: no-drag;
+  font-family: var(--font);
 }
 
-.header .title-input::placeholder {
-  color: var(--text2);
-}
+.chat-title::placeholder { color: var(--text-3); }
 
-.header-actions {
+.topbar-actions {
   display: flex;
   gap: 6px;
-  -webkit-app-region: no-drag;
 }
 
 .icon-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text2);
   width: 34px;
   height: 34px;
   border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-2);
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
 }
 
-.icon-btn:hover {
-  background: var(--surface2);
-  color: var(--text);
-  border-color: var(--border2);
-}
-
-.icon-btn.active {
-  background: var(--accent-dim);
-  color: var(--accent);
-  border-color: var(--accent);
-}
+.icon-btn:hover { background: var(--surface); color: var(--text); border-color: var(--text-3); }
 
 /* === MESSAGES === */
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  scroll-behavior: smooth;
+  gap: 20px;
 }
 
-.messages::-webkit-scrollbar {
-  width: 6px;
-}
-.messages::-webkit-scrollbar-track {
-  background: transparent;
-}
-.messages::-webkit-scrollbar-thumb {
-  background: var(--border2);
-  border-radius: 3px;
-}
+.messages::-webkit-scrollbar { width: 6px; }
+.messages::-webkit-scrollbar-track { background: transparent; }
+.messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 .msg {
-  max-width: 780px;
+  max-width: 720px;
   width: 100%;
+  margin: 0 auto;
   animation: msgIn 0.2s ease;
 }
 
 @keyframes msgIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.msg.user {
-  align-self: flex-end;
+.msg.user { display: flex; justify-content: flex-end; }
+.msg.assistant { display: flex; justify-content: flex-start; }
+
+.bubble {
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.65;
+  word-break: break-word;
 }
 
 .msg.user .bubble {
   background: var(--accent);
   color: #fff;
-  border-radius: 18px 18px 4px 18px;
-  padding: 12px 16px;
-  font-size: 15px;
-  line-height: 1.55;
-  word-break: break-word;
-}
-
-.msg.assistant {
-  align-self: flex-start;
+  border-bottom-right-radius: 4px;
+  max-width: 85%;
 }
 
 .msg.assistant .bubble {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 4px 18px 18px 18px;
-  padding: 14px 18px;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--text);
+  border-bottom-left-radius: 4px;
 }
 
 .msg.assistant .bubble p { margin-bottom: 10px; }
 .msg.assistant .bubble p:last-child { margin-bottom: 0; }
+.msg.assistant .bubble strong { color: var(--text); }
+.msg.assistant .bubble em { color: var(--text-2); }
+.msg.assistant .bubble a { color: var(--accent-light); }
 
 .msg.assistant .bubble pre {
-  background: var(--code-bg);
+  background: #000;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 14px;
   margin: 10px 0;
   overflow-x: auto;
-  font-family: var(--mono);
   font-size: 13px;
   line-height: 1.5;
 }
 
 .msg.assistant .bubble code {
-  background: var(--code-bg);
+  background: rgba(255,255,255,0.07);
   padding: 2px 6px;
   border-radius: 4px;
-  font-family: var(--mono);
   font-size: 13px;
-  color: var(--accent);
 }
 
 .msg.assistant .bubble pre code {
   background: none;
   padding: 0;
-  color: var(--text);
 }
 
 .msg .meta {
   font-size: 11px;
-  color: var(--text2);
+  color: var(--text-3);
   margin-top: 6px;
   padding: 0 4px;
 }
 
-.msg.user .meta {
-  text-align: right;
+.msg.user .meta { text-align: right; }
+
+/* === WELCOME === */
+.welcome {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  text-align: center;
 }
 
-/* === INPUT AREA === */
-.input-area {
-  padding: 14px 20px 18px;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
+.welcome-logo {
+  font-size: 48px;
+  margin-bottom: 8px;
 }
 
-.input-wrapper {
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 8px 8px 8px 16px;
-  transition: border-color 0.2s;
-}
-
-.input-wrapper:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
-}
-
-#input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-size: 15px;
-  font-family: var(--font);
-  resize: none;
-  max-height: 120px;
-  outline: none;
-  line-height: 1.5;
-  padding: 4px 0;
-}
-
-#input::placeholder {
-  color: var(--text2);
-}
-
-.send-btn {
-  background: var(--accent);
-  border: none;
-  color: #fff;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-
-.send-btn:hover:not(:disabled) {
-  background: #7a6cf0;
-  transform: scale(1.05);
-}
-
-.send-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* === SETTINGS PANEL === */
-.panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 340px;
-  background: var(--surface);
-  border-left: 1px solid var(--border);
-  z-index: 100;
-  transform: translateX(100%);
-  transition: transform 0.25s ease;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.panel.open {
-  transform: translateX(0);
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.panel-header h2 {
-  font-size: 15px;
+.welcome h1 {
+  font-size: 24px;
   font-weight: 600;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #fff, #888);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.panel-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-.panel-body::-webkit-scrollbar { width: 4px; }
-.panel-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-.setting {
+.welcome p {
+  color: var(--text-2);
+  font-size: 15px;
+  line-height: 1.6;
   margin-bottom: 24px;
 }
 
-.setting label {
-  display: block;
-  font-size: 11px;
-  color: var(--text2);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
-
-.setting select,
-.setting input[type="text"],
-.setting input[type="number"] {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: var(--font);
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.setting select:focus,
-.setting input:focus {
-  border-color: var(--accent);
-}
-
-.setting select option {
-  background: var(--surface2);
-}
-
-/* Status indicator */
-.status-bar {
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  padding: 8px 20px;
+.quick-actions {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 11px;
-  color: var(--text2);
-  flex-shrink: 0;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.quick-btn {
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.quick-btn:hover { background: var(--surface-hover); color: var(--text); border-color: var(--text-3); }
+
+.models-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.model-chip {
+  padding: 6px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.model-chip:hover, .model-chip.selected {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent-light);
+}
+
+.status-row {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-3);
 }
 
 .status-item {
@@ -377,109 +381,262 @@ body {
   border-radius: 50%;
 }
 
-.dot-green { background: var(--success); }
-.dot-yellow { background: var(--warning); }
-.dot-red { background: var(--danger); }
-.dot-grey { background: var(--text2); }
+.dot-green { background: #22c55e; }
+.dot-yellow { background: #eab308; }
+.dot-red { background: #ef4444; }
+.dot-grey { background: var(--text-3); }
 
-/* Overlay */
-.overlay {
+/* === INPUT === */
+.input-area {
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.input-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 8px 8px 8px 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+#input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--font);
+  resize: none;
+  max-height: 160px;
+  outline: none;
+  line-height: 1.5;
+  padding: 6px 0;
+}
+
+#input::placeholder { color: var(--text-3); }
+
+.send-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.send-btn:hover:not(:disabled) { background: var(--accent-light); transform: scale(1.05); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.input-hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 8px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* === LOADING === */
+.loading-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.loading-dots { display: flex; gap: 4px; }
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  background: var(--text-3);
+  border-radius: 50%;
+  animation: dotPulse 1.4s infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* === SETTINGS PANEL === */
+.panel-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
-  z-index: 99;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s;
+  transition: opacity 0.2s;
 }
 
-.overlay.visible {
-  opacity: 1;
-  pointer-events: all;
-}
+.panel-overlay.open { opacity: 1; pointer-events: all; }
 
-/* Loading indicator */
-.typing-indicator {
+.panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  background: var(--sidebar-bg);
+  border-left: 1px solid var(--border);
+  z-index: 101;
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
   display: flex;
-  gap: 4px;
-  padding: 4px 0;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.typing-indicator span {
-  width: 7px;
-  height: 7px;
-  background: var(--text2);
-  border-radius: 50%;
-  animation: typing 1.2s infinite;
+.panel.open { transform: translateX(0); }
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
 }
 
-.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+.panel-header h2 { font-size: 15px; font-weight: 600; }
 
-@keyframes typing {
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1); }
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
 }
+
+.panel-body::-webkit-scrollbar { width: 4px; }
+.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.setting {
+  margin-bottom: 24px;
+}
+
+.setting label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.setting select,
+.setting input[type="text"],
+.setting input[type="number"] {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.setting select:focus,
+.setting input:focus { border-color: var(--accent); }
+.setting select option { background: var(--surface); }
 
 /* Mobile */
-@media (max-width: 640px) {
-  .header { padding: 10px 14px; }
-  .messages { padding: 14px; }
-  .input-area { padding: 10px 14px 14px; }
+@media (max-width: 768px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { display: none; }
+  .msg { max-width: 100%; }
+  .bubble { font-size: 15px; }
+  .topbar { padding: 10px 16px; }
+  .messages { padding: 14px 16px; }
+  .input-area { padding: 12px 16px 16px; }
   .panel { width: 100%; }
-  .msg.assistant .bubble { padding: 12px 14px; font-size: 14px; }
-  .msg.user .bubble { padding: 10px 14px; font-size: 14px; }
 }
 </style>
 </head>
 <body>
 
-<!-- Header -->
-<div class="header">
-  <div class="logo">⚡</div>
-  <input class="title-input" id="sessionTitle" value="NexusClaw Chat" placeholder="Chat title..." />
-  <div class="header-actions">
-    <button class="icon-btn" onclick="clearChat()" title="New chat">➕</button>
-    <button class="icon-btn" onclick="toggleSettings()" title="Settings" id="settingsBtn">⚙️</button>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      ⚡ NexusClaw
+      <span>YOUR FRAMEWORK</span>
+    </div>
+    <button class="new-chat-btn" onclick="newChat()" title="New chat">+</button>
+  </div>
+  <div class="session-list" id="sessionList"></div>
+  <div class="sidebar-footer">
+    <button class="sidebar-btn" onclick="toggleSettings()">⚙️ Settings</button>
+    <button class="sidebar-btn" onclick="showStatus()">📊 Status</button>
   </div>
 </div>
 
-<!-- Messages -->
-<div class="messages" id="messages">
-  <div class="msg assistant">
-    <div class="bubble">
-      <p>⚡ <strong>NexusClaw OpenRoom</strong></p>
-      <p>Your framework. Your rules.</p>
-      <p>Configure your AI provider below (⚙️), then send a message to get started.</p>
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <input class="chat-title" id="chatTitle" value="New conversation" placeholder="Conversation name..." onchange="saveTitle()" />
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="toggleSettings()" title="Settings">⚙️</button>
+      <button class="icon-btn" onclick="newChat()" title="New chat">✕</button>
     </div>
   </div>
-</div>
 
-<!-- Input -->
-<div class="input-area">
-  <div class="input-wrapper">
-    <textarea id="input" rows="1" placeholder="Message..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-    <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+  <div class="messages" id="messages">
+    <!-- Welcome screen -->
+    <div class="welcome">
+      <div class="welcome-logo">⚡</div>
+      <h1>NexusClaw</h1>
+      <p>Your framework. Your rules.<br>Configure your AI and start building.</p>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="quickPrompt('Write a Python function that...')">Write code</button>
+        <button class="quick-btn" onclick="quickPrompt('Explain this concept:')">Explain something</button>
+        <button class="quick-btn" onclick="quickPrompt('Research:')">Research topic</button>
+        <button class="quick-btn" onclick="quickPrompt('Debug this code:')">Debug code</button>
+      </div>
+      <div class="models-row" id="modelRow"></div>
+      <div class="status-row">
+        <div class="status-item"><span class="status-dot dot-grey" id="apiDot"></span><span id="apiStatus">Checking API...</span></div>
+        <div class="status-item"><span class="status-dot dot-grey" id="ollamaDot"></span><span id="ollamaStatus">Ollama...</span></div>
+        <div class="status-item" id="modelStatusItem"><span id="modelStatus">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-wrapper">
+      <textarea id="input" rows="1" placeholder="Message NexusClaw..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+    </div>
+    <div class="input-hint">NexusClaw · Press Enter to send · Shift+Enter for new line · Ctrl+M for voice</div>
   </div>
 </div>
 
-<!-- Status bar -->
-<div class="status-bar">
-  <div class="status-item">
-    <span class="status-dot dot-grey" id="apiDot"></span>
-    <span id="apiStatus">Checking API...</span>
-  </div>
-  <div class="status-item">
-    <span class="status-dot dot-grey" id="ollamaDot"></span>
-    <span id="ollamaStatus">Ollama...</span>
-  </div>
-  <div style="flex:1"></div>
-  <div class="status-item" id="modelStatus">—</div>
-</div>
-
-<!-- Settings panel -->
-<div class="overlay" id="overlay" onclick="toggleSettings()"></div>
-<div class="panel" id="panel">
+<!-- SETTINGS PANEL -->
+<div class="panel-overlay" id="panelOverlay" onclick="toggleSettings()"></div>
+<div class="panel" id="settingsPanel">
   <div class="panel-header">
     <h2>⚙️ Settings</h2>
     <button class="icon-btn" onclick="toggleSettings()">✕</button>
@@ -487,7 +644,7 @@ body {
   <div class="panel-body">
     <div class="setting">
       <label>AI Provider</label>
-      <select id="provider" onchange="saveSettings()">
+      <select id="selProvider" onchange="saveSettings()">
         <option value="ollama">🤖 Ollama (local, free)</option>
         <option value="openai">✨ OpenAI (GPT-4o)</option>
         <option value="anthropic">🧠 Anthropic (Claude)</option>
@@ -497,11 +654,11 @@ body {
     </div>
     <div class="setting">
       <label>Model</label>
-      <input type="text" id="model" value="llama3.2" placeholder="e.g. llama3.2, gpt-4o" onchange="saveSettings()" />
+      <input type="text" id="selModel" value="llama3.2" placeholder="e.g. llama3.2, gpt-4o" onchange="saveSettings()" />
     </div>
     <div class="setting">
       <label>Soul / Persona</label>
-      <select id="soul" onchange="saveSettings()">
+      <select id="selSoul" onchange="saveSettings()">
         <option value="">Default</option>
         <option value="blank">Blank — pure assistant</option>
         <option value="assistant">Assistant — helpful & friendly</option>
@@ -510,164 +667,134 @@ body {
       </select>
     </div>
     <div class="setting">
-      <label>Temperature</label>
-      <input type="range" id="temp" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('tempVal').textContent=this.value; saveSettings()" />
-      <div id="tempVal" style="color:var(--accent);font-size:12px;margin-top:4px">0.7</div>
+      <label>Temperature — <span id="tempVal">0.7</span></label>
+      <input type="range" id="selTemp" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('tempVal').textContent=this.value; saveSettings()" />
     </div>
     <div class="setting">
-      <label>Max Response Tokens</label>
-      <input type="number" id="maxTokens" value="4096" min="256" max="8192" step="256" onchange="saveSettings()" />
+      <label>Max Tokens</label>
+      <input type="number" id="selMaxTokens" value="4096" min="256" max="8192" step="256" onchange="saveSettings()" />
+    </div>
+    <div class="setting">
+      <label>🤖 Machine Access</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <button class="icon-btn" onclick="lsDir()" title="Browse files" style="width:auto;padding:0 10px;font-size:12px">📁 LS</button>
+        <button class="icon-btn" onclick="runShell()" title="Shell" style="width:auto;padding:0 10px;font-size:12px">⌨ Shell</button>
+        <button class="icon-btn" onclick="sysInfo()" title="System" style="width:auto;padding:0 10px;font-size:12px">💻 Sys</button>
+      </div>
+    </div>
+    <div class="setting">
+      <label>🌐 Browser</label>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <input type="text" id="browserUrl" placeholder="https://..." style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:13px">
+        <button class="icon-btn" onclick="browserNav()" style="width:auto;padding:0 10px;font-size:12px">→</button>
+        <button class="icon-btn" onclick="browserShot()" style="width:auto;padding:0 10px;font-size:12px">📸</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-const WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
-const API_URL = 'http://localhost:8080';
-const PORT = 19789;
-
-let sessionId = localStorage.getItem('nexus_session') || 'main';
+const API = 'http://localhost:8080';
+let sessionId = localStorage.getItem('nexus_session') || 'main_' + Date.now().toString(36);
 let ws = null;
 let streaming = false;
-let reconnectTimer = null;
-
+let currentModel = 'ollama';
 let settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
 
 function loadSettings() {
   if (!settings.provider) settings = {provider: 'ollama', model: 'llama3.2', soul: '', temp: 0.7, maxTokens: 4096};
-  document.getElementById('provider').value = settings.provider || 'ollama';
-  document.getElementById('model').value = settings.model || 'llama3.2';
-  document.getElementById('soul').value = settings.soul || '';
-  document.getElementById('temp').value = settings.temp || 0.7;
+  document.getElementById('selProvider').value = settings.provider;
+  document.getElementById('selModel').value = settings.model || 'llama3.2';
+  document.getElementById('selSoul').value = settings.soul || '';
+  document.getElementById('selTemp').value = settings.temp || 0.7;
   document.getElementById('tempVal').textContent = settings.temp || 0.7;
-  document.getElementById('maxTokens').value = settings.maxTokens || 4096;
-  updateModelStatus();
+  document.getElementById('selMaxTokens').value = settings.maxTokens || 4096;
+  document.getElementById('modelStatus').textContent = settings.provider + '/' + settings.model;
+  currentModel = settings.provider;
 }
+
 function saveSettings() {
-  settings.provider = document.getElementById('provider').value;
-  settings.model = document.getElementById('model').value;
-  settings.soul = document.getElementById('soul').value;
-  settings.temp = parseFloat(document.getElementById('temp').value);
-  settings.maxTokens = parseInt(document.getElementById('maxTokens').value);
+  settings.provider = document.getElementById('selProvider').value;
+  settings.model = document.getElementById('selModel').value;
+  settings.soul = document.getElementById('selSoul').value;
+  settings.temp = parseFloat(document.getElementById('selTemp').value);
+  settings.maxTokens = parseInt(document.getElementById('selMaxTokens').value);
   localStorage.setItem('nexus_settings', JSON.stringify(settings));
-  updateModelStatus();
-  updateSession();
-}
-function updateModelStatus() {
-  const m = document.getElementById('modelStatus');
-  if (m) m.textContent = `${settings.provider}/${settings.model}`;
+  document.getElementById('modelStatus').textContent = settings.provider + '/' + settings.model;
+  currentModel = settings.provider;
 }
 
 loadSettings();
 
-// === WEBSOCKET ===
+// ─── WEBSOCKET ────────────────────────────────────────────────
 function connectWS() {
   if (ws && ws.readyState <= 1) return;
-  
-  ws = new WebSocket(`${WS_URL}/ws/${sessionId}`);
-  
-  ws.onopen = () => {
-    setStatus('api', 'online', 'green');
-    clearTimeout(reconnectTimer);
-  };
-  
-  ws.onclose = () => {
-    setStatus('api', 'reconnecting...', 'yellow');
-    reconnectTimer = setTimeout(connectWS, 3000);
-  };
-  
-  ws.onerror = () => {
-    setStatus('api', 'offline', 'red');
-  };
-  
+  ws = new WebSocket(`ws://${location.host}/ws/${sessionId}`);
+  ws.onopen = () => setStatus('api', 'online', 'green');
+  ws.onclose = () => { setStatus('api', 'reconnecting...', 'yellow'); setTimeout(connectWS, 3000); };
+  ws.onerror = () => setStatus('api', 'error', 'red');
   ws.onmessage = e => {
-    const data = JSON.parse(e.data);
-    if (data.type === 'chunk') {
+    const d = JSON.parse(e.data);
+    if (d.type === 'chunk') {
       streaming = true;
       const last = document.querySelector('.msg.assistant:last-child .bubble');
-      if (last) {
-        last.innerHTML = formatContent(data.content);
-      }
-    } else if (data.type === 'done') {
+      if (last) last.innerHTML += formatContent(d.content);
+      scrollBottom();
+    } else if (d.type === 'done') {
       streaming = false;
       document.getElementById('sendBtn').disabled = false;
-      document.getElementById('sendBtn').textContent = '↑';
-    } else if (data.type === 'error') {
-      streaming = false;
+    } else if (d.type === 'error') {
       const last = document.querySelector('.msg.assistant:last-child .bubble');
-      if (last) last.innerHTML = `<p style="color:var(--danger)">Error: ${data.content}</p>`;
+      if (last) last.innerHTML = `<p style="color:#ef4444">Error: ${d.content}</p>`;
       document.getElementById('sendBtn').disabled = false;
+      streaming = false;
     }
   };
 }
 
-function setStatus(which, text, color) {
-  const dot = document.getElementById(which + 'Dot');
-  const txt = document.getElementById(which + 'Status');
-  if (dot) dot.className = 'status-dot dot-' + color;
-  if (txt) txt.textContent = text;
-}
-
-function updateSession() {
-  // Notify backend of settings change
-  if (ws && ws.readyState === 1) {
-    ws.send(JSON.stringify({type: 'settings', settings}));
-  }
-}
-
-// === CHAT ===
+// ─── CHAT ──────────────────────────────────────────────────────
 async function sendMessage() {
   const input = document.getElementById('input');
   const msg = input.value.trim();
   if (!msg || streaming) return;
   
-  addMessage('user', msg);
+  hideWelcome();
+  
+  addMsg('user', msg);
   input.value = '';
   input.style.height = 'auto';
   
   document.getElementById('sendBtn').disabled = true;
-  document.getElementById('sendBtn').textContent = '⟳';
   
-  // Add empty assistant message
-  addMessage('assistant', '<div class="typing-indicator"><span></span><span></span><span></span></div>');
+  // Empty assistant msg
+  const aid = addMsg('assistant', '<div class="loading-msg"><div class="loading-dots"><span></span><span></span><span></span></div>Thinking...</div>');
+  
   scrollBottom();
   
-  // Ensure connected
   if (!ws || ws.readyState > 1) connectWS();
   
   if (ws.readyState === 1) {
     ws.send(JSON.stringify({
-      type: 'chat',
-      content: msg,
-      provider: settings.provider,
-      model: settings.model,
-      soul: settings.soul,
-      temperature: settings.temp,
-      maxTokens: settings.maxTokens,
+      type: 'chat', content: msg,
+      provider: settings.provider, model: settings.model,
+      soul: settings.soul, temperature: settings.temp,
+      maxTokens: settings.maxTokens
     }));
   } else {
-    // Fallback to HTTP
-    await httpStream(msg);
+    await httpStream(msg, aid);
   }
 }
 
-async function httpStream(message) {
-  const container = document.querySelector('.msg.assistant:last-child .bubble');
-  
+async function httpStream(message, aid) {
   try {
-    const resp = await fetch(`${API_URL}/v1/chat/answer/stream`, {
+    const resp = await fetch(`${API}/v1/chat/answer/stream`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        sessionId,
-        message,
-        provider: settings.provider,
-        model: settings.model,
-      })
+      body: JSON.stringify({sessionId, message, provider: settings.provider, model: settings.model})
     });
     
     if (!resp.ok) {
-      container.innerHTML = `<p style="color:var(--danger)">API error: ${resp.status}. Is the API running?</p>`;
+      setBubble(aid, `<p style="color:#ef4444">API error ${resp.status}. Is the API running?</p>`);
       return;
     }
     
@@ -678,15 +805,14 @@ async function httpStream(message) {
     while (true) {
       const {done, value} = await reader.read();
       if (done) break;
-      
       const text = decoder.decode(value, {stream: true});
       for (const line of text.split('\n')) {
         if (line.startsWith('data: ')) {
           try {
-            const data = JSON.parse(line.slice(6));
-            if (data.type === 'chunk') {
-              full += data.content;
-              container.innerHTML = formatContent(full);
+            const d = JSON.parse(line.slice(6));
+            if (d.type === 'chunk') {
+              full += d.content;
+              setBubble(aid, formatContent(full));
               scrollBottom();
             }
           } catch {}
@@ -694,49 +820,44 @@ async function httpStream(message) {
       }
     }
   } catch(e) {
-    container.innerHTML = `<p style="color:var(--danger)">Connection failed: ${e.message}</p><p style="color:var(--text2);font-size:13px;margin-top:8px">Start the API: <code style="background:var(--code-bg);padding:2px 6px;border-radius:4px">python3 apps/api/main.py</code></p>`;
+    setBubble(aid, `<p style="color:#ef4444">Connection failed: ${e.message}</p><p style="color:#888;font-size:12px;margin-top:8px">Start API: <code style="background:rgba(255,255,255,.07);padding:2px 6px;border-radius:4px">python3 apps/api/main.py</code></p>`);
   }
   
   document.getElementById('sendBtn').disabled = false;
-  document.getElementById('sendBtn').textContent = '↑';
   streaming = false;
 }
 
-function addMessage(role, content) {
+function addMsg(role, content) {
   const div = document.createElement('div');
   div.className = 'msg ' + role;
-  
-  if (role === 'assistant') {
-    div.innerHTML = `<div class="bubble">${content}</div><div class="meta">NexusClaw · just now</div>`;
-  } else {
-    div.innerHTML = `<div class="bubble">${escapeHtml(content)}</div><div class="meta">You · just now</div>`;
-  }
-  
+  div.innerHTML = `<div class="bubble">${content}</div><div class="meta">${role === 'user' ? 'You' : 'NexusClaw'} · just now</div>`;
   document.getElementById('messages').appendChild(div);
   scrollBottom();
   return div;
 }
 
-function formatContent(text) {
-  // Escape first, then format
-  let html = escapeHtml(text);
-  // Bold
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // Italic
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  // Code blocks
-  html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => 
-    `<pre><code class="lang-${lang}">${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`);
-  // Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // Line breaks
-  html = html.replace(/\n/g, '<br>');
-  return html;
+function setBubble(el, html) {
+  el.querySelector('.bubble').innerHTML = html;
 }
 
-function escapeHtml(text) {
+function hideWelcome() {
+  const w = document.querySelector('.welcome');
+  if (w) w.style.display = 'none';
+}
+
+function formatContent(text) {
+  let h = escapeHtml(text);
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  h = h.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, l, c) => `<pre><code class="lang-${l}">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre>`);
+  h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+  h = h.replace(/\n/g, '<br>');
+  return h;
+}
+
+function escapeHtml(t) {
   const d = document.createElement('div');
-  d.textContent = text;
+  d.textContent = t;
   return d.innerHTML;
 }
 
@@ -754,135 +875,142 @@ function handleKey(e) {
 
 function autoResize(el) {
   el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
 }
 
-function clearChat() {
-  document.getElementById('messages').innerHTML = `
-    <div class="msg assistant">
-      <div class="bubble">
-        <p>⚡ <strong>New conversation</strong></p>
-        <p>Your framework. Your rules.</p>
-      </div>
-    </div>`;
+function newChat() {
+  document.getElementById('messages').innerHTML = document.querySelector('.welcome').outerHTML;
+  document.querySelector('.welcome').style.display = 'block';
   sessionId = 'main_' + Date.now().toString(36);
   localStorage.setItem('nexus_session', sessionId);
+  document.getElementById('chatTitle').value = 'New conversation';
+  connectWS();
 }
 
-function toggleSettings() {
-  const panel = document.getElementById('panel');
-  const overlay = document.getElementById('overlay');
-  const btn = document.getElementById('settingsBtn');
-  panel.classList.toggle('open');
-  overlay.classList.toggle('visible');
-  btn.classList.toggle('active');
+function saveTitle() {
+  localStorage.setItem('nexus_title_' + sessionId, document.getElementById('chatTitle').value);
 }
 
-// === STATUS CHECK ===
+function quickPrompt(text) {
+  document.getElementById('input').value = text;
+  document.getElementById('input').focus();
+}
+
+// ─── STATUS ────────────────────────────────────────────────────
+function setStatus(which, text, color) {
+  const dot = document.getElementById(which + 'Dot');
+  const txt = document.getElementById(which + 'Status');
+  if (dot) dot.className = 'status-dot dot-' + color;
+  if (txt) txt.textContent = text;
+}
+
 async function checkStatus() {
-  // API
   try {
-    const r = await fetch(`${API_URL}/health`, {signal: AbortSignal.timeout(3000)});
-    if (r.ok) {
-      setStatus('api', 'API online', 'green');
-    } else {
-      setStatus('api', `API error ${r.status}`, 'red');
-    }
-  } catch {
-    setStatus('api', 'API offline', 'red');
-  }
+    const r = await fetch(`${API}/health`, {signal: AbortSignal.timeout(3000)});
+    if (r.ok) setStatus('api', 'API online', 'green'); else setStatus('api', `error ${r.status}`, 'red');
+  } catch { setStatus('api', 'offline', 'red'); }
   
-  // Ollama
   try {
     const r = await fetch('http://localhost:11434/api/tags', {signal: AbortSignal.timeout(3000)});
     if (r.ok) {
       const d = await r.json();
       setStatus('ollama', `${d.models.length} models`, 'green');
-    } else {
-      setStatus('ollama', `Ollama error`, 'red');
-    }
-  } catch {
-    setStatus('ollama', 'Ollama offline', 'red');
-  }
+      // Update model chips
+      const row = document.getElementById('modelRow');
+      row.innerHTML = d.models.slice(0, 6).map(m => 
+        `<button class="model-chip${m.name === settings.model ? ' selected' : ''}" onclick="selectModel('ollama','${m.name}')">${m.name.split(':')[0]}</button>`
+      ).join('');
+    } else setStatus('ollama', 'error', 'red');
+  } catch { setStatus('ollama', 'offline', 'red'); }
 }
 
-// Init
-connectWS();
-checkStatus();
-setInterval(checkStatus, 15000);
+function selectModel(provider, model) {
+  settings.provider = provider;
+  settings.model = model;
+  saveSettings();
+  document.querySelectorAll('.model-chip').forEach(b => b.classList.remove('selected'));
+  event.target.classList.add('selected');
+}
 
-// Auto-focus input
-document.getElementById('input').focus();
+// ─── SETTINGS PANEL ───────────────────────────────────────────
+function toggleSettings() {
+  const panel = document.getElementById('settingsPanel');
+  const overlay = document.getElementById('panelOverlay');
+  panel.classList.toggle('open');
+  overlay.classList.toggle('open');
+}
 
-// ─── MACHINE ACCESS ────────────────────────────────────────────
+function showStatus() {
+  checkStatus();
+  alert('Status checked — see the dots in the welcome screen');
+}
+
+// ─── MACHINE ───────────────────────────────────────────────────
 async function lsDir() {
-  const path = prompt("Directory path:", "/home/greench");
+  const path = prompt('Directory path:', '/home/greench');
   if (!path) return;
   try {
-    const resp = await fetch(`${API_URL}/v1/tools/ls?path=${encodeURIComponent(path)}`);
-    const data = await resp.json();
-    if (data.error) { alert(data.error); return; }
-    const items = data.items || [];
-    const listing = items.slice(0,50).map(i => `${i.type === 'dir' ? '📁' : '📄'} ${i.name}${i.size ? ' (' + Math.round(i.size/1024) + 'KB)' : ''}`).join('\n');
-    alert(`${data.path}\n\n${listing || 'empty'}${items.length > 50 ? '\n...and ' + (items.length-50) + ' more' : ''}`);
+    const resp = await fetch(`${API}/v1/tools/ls?path=${encodeURIComponent(path)}`);
+    const d = await resp.json();
+    if (d.error) { alert(d.error); return; }
+    const items = (d.items || []).slice(0, 50);
+    alert(`${d.path}\n\n${items.map(i => `${i.type === 'dir' ? '📁' : '📄'} ${i.name}`).join('\n')}${d.items?.length > 50 ? '\n...and ' + (d.items.length - 50) + ' more' : ''}`);
   } catch(e) { alert('Error: ' + e.message); }
 }
 
 async function runShell() {
-  const cmd = prompt("Shell command:");
+  const cmd = prompt('Shell command:');
   if (!cmd) return;
   try {
-    const resp = await fetch(`${API_URL}/v1/tools/shell?command=${encodeURIComponent(cmd)}`, {method:'POST'});
-    const data = await resp.json();
-    alert('stdout:\n' + (data.stdout || '(empty)') + '\n\nstderr:\n' + (data.stderr || '(empty)') + '\n\nexit: ' + data.returncode);
+    const resp = await fetch(`${API}/v1/tools/shell?command=${encodeURIComponent(cmd)}`, {method:'POST'});
+    const d = await resp.json();
+    alert('stdout:\n' + (d.stdout || '(empty)') + '\n\nstderr:\n' + (d.stderr || '(empty)') + '\n\nexit: ' + d.returncode);
   } catch(e) { alert('Error: ' + e.message); }
 }
 
 async function sysInfo() {
   try {
-    const resp = await fetch(`${API_URL}/v1/tools/system`, {method:'POST'});
-    const data = await resp.json();
-    const s = data.system || {};
+    const resp = await fetch(`${API}/v1/tools/system`, {method:'POST'});
+    const d = await resp.json();
+    const s = d.system || {};
     alert(`OS: ${s.os}\nHost: ${s.hostname}\nCPU: ${s.cpu_percent}% (${s.cpu_count} cores)\nRAM: ${s.memory_used_gb}GB / ${s.memory_total_gb}GB (${s.memory_percent}%)\nDisk: ${s.disk_percent}%`);
   } catch(e) { alert('Error: ' + e.message); }
 }
 
-async function showProcs() {
-  try {
-    const resp = await fetch(`${API_URL}/v1/tools/system`, {method:'POST'});
-    const data = await resp.json();
-    const procs = (data.processes?.processes || []).slice(0, 20);
-    const listing = procs.map(p => `PID ${p.pid}: ${p.name} (CPU:${p.cpu?.toFixed(1)}% MEM:${p.mem?.toFixed(1)}%)`).join('\n');
-    alert('Top Processes:\n\n' + listing);
-  } catch(e) { alert('Error: ' + e.message); }
-}
-
-// ─── BROWSER AUTOMATION ────────────────────────────────────────
 async function browserNav() {
   const url = document.getElementById('browserUrl')?.value;
   if (!url) return;
   try {
-    const resp = await fetch(`${API_URL}/v1/tools/browser/navigate?url=${encodeURIComponent(url)}`, {method:'POST'});
-    const data = await resp.json();
-    alert(data.ok ? `Loaded: ${data.title || url}` : 'Error: ' + (data.error || 'failed'));
+    const resp = await fetch(`${API}/v1/tools/browser/navigate?url=${encodeURIComponent(url)}`, {method:'POST'});
+    const d = await resp.json();
+    alert(d.ok ? `Loaded: ${d.title || url}` : 'Error: ' + (d.error || 'failed'));
   } catch(e) { alert('Error: ' + e.message); }
 }
 
 async function browserShot() {
   try {
-    const resp = await fetch(`${API_URL}/v1/tools/browser/screenshot`, {method:'POST'});
-    const data = await resp.json();
-    alert(data.ok ? `Screenshot saved:\n${data.path}` : 'Error: ' + (data.error || 'failed'));
+    const resp = await fetch(`${API}/v1/tools/browser/screenshot`, {method:'POST'});
+    const d = await resp.json();
+    alert(d.ok ? `Screenshot: ${d.path}` : 'Error: ' + (d.error || 'failed'));
   } catch(e) { alert('Error: ' + e.message); }
 }
 
-async function browserClose() {
-  try {
-    await fetch(`${API_URL}/v1/tools/browser/close`, {method:'POST'});
-    alert('Browser closed');
-  } catch(e) { alert('Error: ' + e.message); }
-}
+// ─── INIT ──────────────────────────────────────────────────────
+connectWS();
+checkStatus();
+setInterval(checkStatus, 15000);
+document.getElementById('input').focus();
 
+// Voice
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const sr = new SR();
+  sr.lang = 'en-US';
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'm') { e.preventDefault(); sr.start(); }
+  });
+  sr.onresult = ev => { document.getElementById('input').value = ev.results[0][0].transcript; };
+}
 </script>
 </body>
 </html>
