@@ -813,6 +813,76 @@ setInterval(checkStatus, 15000);
 
 // Auto-focus input
 document.getElementById('input').focus();
+
+// ─── MACHINE ACCESS ────────────────────────────────────────────
+async function lsDir() {
+  const path = prompt("Directory path:", "/home/greench");
+  if (!path) return;
+  try {
+    const resp = await fetch(`${API_URL}/v1/tools/ls?path=${encodeURIComponent(path)}`);
+    const data = await resp.json();
+    if (data.error) { alert(data.error); return; }
+    const items = data.items || [];
+    const listing = items.slice(0,50).map(i => `${i.type === 'dir' ? '📁' : '📄'} ${i.name}${i.size ? ' (' + Math.round(i.size/1024) + 'KB)' : ''}`).join('\n');
+    alert(`${data.path}\n\n${listing || 'empty'}${items.length > 50 ? '\n...and ' + (items.length-50) + ' more' : ''}`);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function runShell() {
+  const cmd = prompt("Shell command:");
+  if (!cmd) return;
+  try {
+    const resp = await fetch(`${API_URL}/v1/tools/shell?command=${encodeURIComponent(cmd)}`, {method:'POST'});
+    const data = await resp.json();
+    alert('stdout:\n' + (data.stdout || '(empty)') + '\n\nstderr:\n' + (data.stderr || '(empty)') + '\n\nexit: ' + data.returncode);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function sysInfo() {
+  try {
+    const resp = await fetch(`${API_URL}/v1/tools/system`, {method:'POST'});
+    const data = await resp.json();
+    const s = data.system || {};
+    alert(`OS: ${s.os}\nHost: ${s.hostname}\nCPU: ${s.cpu_percent}% (${s.cpu_count} cores)\nRAM: ${s.memory_used_gb}GB / ${s.memory_total_gb}GB (${s.memory_percent}%)\nDisk: ${s.disk_percent}%`);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function showProcs() {
+  try {
+    const resp = await fetch(`${API_URL}/v1/tools/system`, {method:'POST'});
+    const data = await resp.json();
+    const procs = (data.processes?.processes || []).slice(0, 20);
+    const listing = procs.map(p => `PID ${p.pid}: ${p.name} (CPU:${p.cpu?.toFixed(1)}% MEM:${p.mem?.toFixed(1)}%)`).join('\n');
+    alert('Top Processes:\n\n' + listing);
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+// ─── BROWSER AUTOMATION ────────────────────────────────────────
+async function browserNav() {
+  const url = document.getElementById('browserUrl')?.value;
+  if (!url) return;
+  try {
+    const resp = await fetch(`${API_URL}/v1/tools/browser/navigate?url=${encodeURIComponent(url)}`, {method:'POST'});
+    const data = await resp.json();
+    alert(data.ok ? `Loaded: ${data.title || url}` : 'Error: ' + (data.error || 'failed'));
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function browserShot() {
+  try {
+    const resp = await fetch(`${API_URL}/v1/tools/browser/screenshot`, {method:'POST'});
+    const data = await resp.json();
+    alert(data.ok ? `Screenshot saved:\n${data.path}` : 'Error: ' + (data.error || 'failed'));
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function browserClose() {
+  try {
+    await fetch(`${API_URL}/v1/tools/browser/close`, {method:'POST'});
+    alert('Browser closed');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
 </script>
 </body>
 </html>

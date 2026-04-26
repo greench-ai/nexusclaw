@@ -159,10 +159,14 @@ def running_processes() -> dict:
     try:
         import psutil
         procs = []
-        for p in psutil.process_iter(["pid", "name", "cpu_percent", "memory_percent"])[:30]:
+        for p in psutil.process_iter()[:30]:
             try:
-                info = p.info
-                procs.append({"pid": info["pid"], "name": info["name"], "cpu": info["cpu_percent"], "mem": info["memory_percent"]})
+                procs.append({
+                    "pid": p.pid,
+                    "name": p.name(),
+                    "cpu": p.cpu_percent(interval=0.01),
+                    "mem": p.memory_percent()
+                })
             except: pass
         return {"processes": procs}
     except Exception as e:

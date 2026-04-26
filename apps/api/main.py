@@ -2,7 +2,14 @@
 NexusClaw API Server v0.3
 FastAPI + WebSocket streaming, JWT auth, chat sessions, file upload, RAG, autonomous goals.
 """
-import asyncio, json, uuid, jwt, datetime, os
+import asyncio, json, uuid, jwt, datetime, os, sys
+from pathlib import Path
+
+# Add nexusclaw root to path so 'src/' imports work
+NexusClaw_ROOT = Path(__file__).resolve().parent.parent.parent  # /home/greench/nexusclaw
+if str(NexusClaw_ROOT) not in sys.path:
+    sys.path.insert(0, str(NexusClaw_ROOT))
+
 from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -239,6 +246,74 @@ def kill_all(user=Depends(get_user)):
             goal["events"].append({"type": "killed", "at": datetime.datetime.utcnow().isoformat(), "by": user["id"]})
             count += 1
     return {"ok": True, "killed": count}
+
+# ─── MACHINE TOOLS ──────────────────────────────────────────────
+
+@app.get("/v1/tools/system")
+async def api_system_info():
+    """Get system information."""
+    from src.tools.machine import system_info, running_processes, docker_status
+    return {
+        "system": system_info(),
+        "processes": running_processes(),
+        "docker": docker_status()
+    }
+
+@app.get("/v1/tools/ls")
+async def api_list_dir(path: str = "/home/greench", recursive: bool = False):
+    """List directory."""
+    from src.tools.machine import list_dir
+    return list_dir(path, recursive)
+
+@app.get("/v1/tools/read")
+async def api_read_file(path: str, max_chars: int = 50000):
+    """Read file."""
+    from src.tools.machine import read_file
+    return read_file(path, max_chars)
+
+@app.post("/v1/tools/write")
+async def api_write_file(data: dict):
+    """Write file."""
+    from src.tools.machine import write_file
+    return write_file(data.get("path", ""), data.get("content", ""))
+
+@app.post("/v1/tools/shell")
+async def api_shell(command: str, timeout: int = 30):
+    """Run shell command."""
+    from src.tools.machine import run_shell
+    return run_shell(command, timeout)
+
+# ─── BROWSER ───────────────────────────────────────────────────
+
+@app.post("/v1/tools/browser/navigate")
+async def api_browser_navigate(url: str):
+    """Navigate browser to URL."""
+    from src.tools.browser import navigate
+    return navigate(url)
+
+@app.get("/v1/tools/browser/screenshot")
+async def api_browser_screenshot(name: str = ""):
+    """Take screenshot."""
+    from src.tools.browser import screenshot
+    return screenshot(name)
+
+@app.post("/v1/tools/browser/click")
+async def api_browser_click(selector: str):
+    """Click element."""
+    from src.tools.browser import click
+    return click(selector)
+
+@app.post("/v1/tools/browser/type")
+async def api_browser_type(data: dict):
+    """Type into element."""
+    from src.tools.browser import type_text
+    return type_text(data.get("selector", ""), data.get("text", ""))
+
+@app.post("/v1/tools/browser/close")
+async def api_browser_close():
+    """Close browser."""
+    from src.tools.browser import close
+    return close()
 
 if __name__ == "__main__":
     import uvicorn
