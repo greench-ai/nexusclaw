@@ -1,0 +1,34 @@
+[project]
+name = "nexusclaw"
+version = "0.12.0"
+description = "Freedom-first unified AI agent framework"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.0",
+    "python-jose[cryptography]",
+    "python-multipart",
+    "aiohttp>=3.9.0",
+    "httpx>=0.26.0",
+    "qdrant-client>=1.7.0",
+    "chromadb>=0.4.22",
+    "pymupdf>=1.23.0",
+    "mammoth>=1.6.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "numpy>=1.26.0",
+    "PyJWT>=2.8.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-asyncio>=0.23.0", "black>=24.0", "ruff>=0.2.0"]
+
+[project.scripts]
+nexusclaw = "src.cli.main:main"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
