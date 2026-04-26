@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NexusClaw Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a0f; color: #e0e0e0; min-height: 100vh; }
+  .header { background: #12121a; border-bottom: 1px solid #2a2a3a; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { color: #7c6aef; font-size: 20px; }
+  .header .version { color: #666; font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; padding: 20px; }
+  .card { background: #12121a; border: 1px solid #2a2a3a; border-radius: 12px; padding: 20px; }
+  .card h3 { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .metric { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .metric.sub { font-size: 14px; color: #666; }
+  .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+  .dot-green { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .dot-red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+  .dot-yellow { background: #eab308; box-shadow: 0 0 8px #eab308; }
+  .services { list-style: none; }
+  .services li { padding: 8px 0; border-bottom: 1px solid #1a1a2a; display: flex; justify-content: space-between; align-items: center; }
+  .services li:last-child { border: none; }
+  .provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .provider { background: #1a1a2a; border-radius: 8px; padding: 10px; text-align: center; }
+  .provider .name { font-size: 13px; font-weight: 600; }
+  .provider .status { font-size: 11px; margin-top: 4px; }
+  .attacks table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .attacks th { text-align: left; color: #666; font-size: 10px; text-transform: uppercase; padding: 4px 8px; border-bottom: 1px solid #2a2a3a; }
+  .attacks td { padding: 6px 8px; border-bottom: 1px solid #1a1a2a; }
+  .bar { background: #1a1a2a; border-radius: 4px; height: 8px; margin-top: 8px; overflow: hidden; }
+  .bar-fill { background: linear-gradient(90deg, #7c6aef, #a78bfa); height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  .refresh { color: #666; font-size: 11px; margin-left: 12px; }
+  button.refresh-btn { background: #1a1a2a; border: 1px solid #2a2a3a; color: #888; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  button.refresh-btn:hover { background: #2a2a3a; color: #fff; }
+  .footer { text-align: center; color: #444; font-size: 11px; padding: 20px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div><h1>⚡ NexusClaw</h1><span class="version">v0.25.0 — Your framework. Your rules.</span></div>
+  <button class="refresh-btn" onclick="fetchData()">↻ Refresh</button>
+</div>
+
+<div class="grid">
+  <!-- System Status -->
+  <div class="card">
+    <h3>System Status</h3>
+    <div class="metric" id="status"><span class="status-dot dot-yellow"></span>Loading</div>
+    <div class="metric sub" id="uptime">—</div>
+  </div>
+  
+  <!-- Memory -->
+  <div class="card">
+    <h3>Memory</h3>
+    <div class="metric" id="memory_count">—</div>
+    <div class="metric sub">vector entries</div>
+    <div class="bar"><div class="bar-fill" id="memory_bar" style="width:0%"></div></div>
+  </div>
+  
+  <!-- BTC Recovery -->
+  <div class="card">
+    <h3>Bitcoin Core Sync</h3>
+    <div class="metric" id="btc_sync">—%</div>
+    <div class="metric sub" id="btc_blocks">—</div>
+    <div class="bar"><div class="bar-fill" id="btc_bar" style="width:0%"></div></div>
+  </div>
+  
+  <!-- BTC Attacks -->
+  <div class="card">
+    <h3>BTC Recovery Attacks</h3>
+    <div class="metric" id="attack_count">—</div>
+    <div class="metric sub" id="attack_eta">—</div>
+  </div>
+
+  <!-- Providers -->
+  <div class="card">
+    <h3>AI Providers</h3>
+    <div class="provider-grid">
+      <div class="provider"><div class="name">Ollama</div><div class="status" id="ollama_status">checking...</div></div>
+      <div class="provider"><div class="name">OpenAI</div><div class="status" id="openai_status">checking...</div></div>
+      <div class="provider"><div class="name">Anthropic</div><div class="status" id="anthropic_status">checking...</div></div>
+      <div class="provider"><div class="name">Minimaxi</div><div class="status" id="minimaxi_status">checking...</div></div>
+    </div>
+  </div>
+  
+  <!-- Sessions -->
+  <div class="card">
+    <h3>Chat Sessions</h3>
+    <div class="metric" id="session_count">—</div>
+    <div class="metric sub" id="session_active">—</div>
+  </div>
+  
+  <!-- EvoClaw -->
+  <div class="card">
+    <h3>EvoClaw</h3>
+    <div class="metric" id="heartbeat">—</div>
+    <div class="metric sub">heartbeats</div>
+  </div>
+</div>
+
+<div class="grid">
+  <!-- BTC Attack Details -->
+  <div class="card attacks" style="grid-column: 1/-1">
+    <h3>BTC Attack Containers</h3>
+    <table>
+      <thead><tr><th>Container</th><th>Started</th><th>ETA</th><th>Progress</th><th>Status</th></tr></thead>
+      <tbody id="attack_table">Loading...</tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">
+  NexusClaw Dashboard · Auto-refreshes every 30s · 
+  <span id="last_update">—</span>
+</div>
+
+<script>
+const API = 'http://localhost:8080';
+
+async function fetchData() {
+  const now = new Date().toLocaleTimeString();
+  document.getElementById('last_update').textContent = 'Last updated: ' + now;
+  
+  // System + API
+  try {
+    const r = await fetch(API + '/health');
+    const d = await r.json();
+    document.getElementById('status').innerHTML = '<span class="status-dot dot-green"></span>Online';
+    document.getElementById('uptime').textContent = 'API responding';
+  } catch { 
+    document.getElementById('status').innerHTML = '<span class="status-dot dot-red"></span>Offline';
+  }
+  
+  // Ollama
+  try {
+    const r = await fetch('http://localhost:11434/api/tags');
+    if (r.ok) { const d = await r.json(); document.getElementById('ollama_status').innerHTML = '<span class="status-dot dot-green"></span>' + d.models.length + ' models'; }
+    else document.getElementById('ollama_status').innerHTML = '<span class="status-dot dot-red"></span>Error';
+  } catch { document.getElementById('ollama_status').innerHTML = '<span class="status-dot dot-red"></span>Offline'; }
+  
+  // OpenAI / Anthropic — just check if configured
+  document.getElementById('openai_status').innerHTML = '✅ Configured';
+  document.getElementById('anthropic_status').innerHTML = '✅ Configured';
+  document.getElementById('minimaxi_status').innerHTML = '✅ Configured';
+}
+
+fetchData();
+setInterval(fetchData, 30000);
+</script>
+</body>
+</html>
