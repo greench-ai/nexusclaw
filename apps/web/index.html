@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NexusClaw — OpenRoom</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d1117; --sidebar: #161b22; --border: #30363d;
+      --text: #e6edf3; --muted: #7d8590; --accent: #58a6ff;
+      --user-bg: #1f6feb; --nexus-bg: #21262d; --code: #c9d1d9;
+    }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, sans-serif; height: 100vh; display: flex; }
+    
+    /* Sidebar */
+    #sidebar { width: 260px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    #sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
+    #sidebar-header h1 { font-size: 18px; color: var(--accent); }
+    #sidebar-header p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    #new-chat { margin: 12px; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    #sessions { flex: 1; overflow-y: auto; padding: 8px; }
+    .session-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; font-size: 13px; color: var(--muted); }
+    .session-item:hover, .session-item.active { background: var(--border); color: var(--text); }
+    .session-item.active { color: var(--accent); }
+    
+    /* Main */
+    #main { flex: 1; display: flex; flex-direction: column; height: 100vh; }
+    
+    /* Header */
+    #header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 13px; }
+    #header select { background: var(--sidebar); color: var(--text); border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-size: 12px; }
+    #header .provider { color: var(--muted); }
+    #header .model { color: var(--accent); }
+    
+    /* Chat area */
+    #chat { flex: 1; overflow-y: auto; padding: 20px; }
+    .msg { max-width: 720px; margin: 0 auto 20px; display: flex; gap: 12px; }
+    .msg.user { flex-direction: row-reverse; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .msg.user .avatar { background: var(--user-bg); }
+    .msg.nexus .avatar { background: var(--nexus-bg); border: 1px solid var(--border); }
+    .bubble { max-width: 85%; padding: 12px 16px; border-radius: 12px; line-height: 1.6; font-size: 14px; }
+    .msg.user .bubble { background: var(--user-bg); border-bottom-right-radius: 4px; }
+    .msg.nexus .bubble { background: var(--nexus-bg); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .bubble pre { background: #000; padding: 12px; border-radius: 6px; overflow-x: auto; margin: 8px 0; font-size: 13px; }
+    .bubble code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 13px; }
+    .bubble pre code { background: none; padding: 0; }
+    .citation { font-size: 12px; color: var(--muted); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+    .citation sup { color: var(--accent); cursor: pointer; }
+    
+    /* Input */
+    #input-area { padding: 16px 20px; border-top: 1px solid var(--border); }
+    #input-area textarea { width: 100%; background: var(--sidebar); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; font-size: 14px; resize: none; outline: none; min-height: 48px; max-height: 200px; font-family: inherit; }
+    #input-area textarea:focus { border-color: var(--accent); }
+    #input-area .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+    #input-area .tools { display: flex; gap: 8px; }
+    #input-area .tool-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    #input-area .tool-btn:hover { border-color: var(--accent); color: var(--accent); }
+    #send-btn { background: var(--accent); color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    #send-btn:hover { opacity: 0.9; }
+    
+    /* Stream indicator */
+    .streaming { display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: pulse 1s infinite; margin-left: 8px; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    
+    /* Empty state */
+    #empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+    #empty h2 { font-size: 24px; margin-bottom: 8px; }
+    #empty p { font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div id="sidebar-header">
+      <h1>NexusClaw</h1>
+      <p>Your framework. Your rules.</p>
+    </div>
+    <button id="new-chat">+ New Chat</button>
+    <div id="sessions"></div>
+  </div>
+  
+  <div id="main">
+    <div id="header">
+      <select id="provider-select">
+        <option value="ollama">🖥️ Local (Ollama)</option>
+        <option value="openai">🤖 OpenAI</option>
+        <option value="anthropic">🧠 Anthropic</option>
+        <option value="minimaxi">⚡ Minimaxi</option>
+      </select>
+      <select id="model-select">
+        <option value="llama3.2">llama3.2</option>
+      </select>
+      <span class="provider" id="provider-label">Local</span>
+      <span style="flex:1"></span>
+      <span id="soul-label" style="color:var(--accent);font-size:12px;">Nexus</span>
+    </div>
+    
+    <div id="chat">
+      <div id="empty">
+        <h2>NexusClaw OpenRoom</h2>
+        <p>Ask anything. Search the web. Upload files. No restrictions.</p>
+      </div>
+    </div>
+    
+    <div id="input-area">
+      <textarea id="msg-input" placeholder="Ask anything... (Ctrl+Enter to send)" rows="1"></textarea>
+      <div class="controls">
+        <div class="tools">
+          <button class="tool-btn" onclick="uploadFile()">📎 File</button>
+          <button class="tool-btn" onclick="toggleSearch()">🔍 Web Search</button>
+          <button class="tool-btn" onclick="toggleVoice()">🎤 Voice</button>
+        </div>
+        <button id="send-btn" onclick="sendMsg()">Send</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const API = "http://localhost:8080";
+let sessionId = null;
+let webSearch = false;
+let voiceInput = false;
+let msgHistory = [];
+let currentStreamAbort = null;
+
+const PROVIDER_MODELS = {
+  ollama: ["llama3.2", "llama3.1", "mistral", "codellama"],
+  openai: ["gpt-4o", "gpt-4o-mini", "o1", "o3-mini"],
+  anthropic: ["claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022"],
+  minimaxi: ["MiniMax-M2.7-highspeed", "abab6.5s-chat"]
+];
+
+document.getElementById("provider-select").addEventListener("change", e => {
+  const p = e.target.value;
+  const sel = document.getElementById("model-select");
+  sel.innerHTML = "";
+  PROVIDER_MODELS[p].forEach(m => sel.innerHTML += `<option value="${m}">${m}</option>`);
+  document.getElementById("provider-label").textContent = p === "ollama" ? "Local" : p;
+});
+
+document.getElementById("msg-input").addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) sendMsg();
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+
+function addMsg(role, content, citation = null) {
+  const chat = document.getElementById("chat");
+  document.getElementById("empty").style.display = "none";
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  const icon = role === "user" ? "👤" : "🤖";
+  div.innerHTML = `
+    <div class="avatar">${icon}</div>
+    <div class="bubble">${formatContent(content)}${citation ? `<div class="citation">${citation}</div>` : ""}</div>
+  `;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+function formatContent(text) {
+  // Code blocks
+  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => 
+    `<pre><code class="lang-${lang}">${escapeHtml(code.trim())}</code></pre>`);
+  // Inline code
+  text = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+  // Bold
+  text = text.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  // Links
+  text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color:var(--accent)">$1</a>');
+  // Citations
+  text = text.replace(/\[\^(\d+)\]/g, '<sup>[$1]</sup>');
+  return text.replace(/\n/g, "<br>");
+}
+
+function escapeHtml(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+async function sendMsg() {
+  const input = document.getElementById("msg-input");
+  const text = input.value.trim();
+  if (!text) return;
+  
+  input.value = "";
+  msgHistory.push({ role: "user", content: text });
+  addMsg("user", text);
+  
+  const msgDiv = addMsg("nexus", "<span class='streaming'>");
+  
+  try {
+    const provider = document.getElementById("provider-select").value;
+    const model = document.getElementById("model-select").value;
+    
+    // Build messages with system prompt
+    const messages = [
+      { role: "system", content: "You are Nexus, a helpful AI assistant. You have access to web search, file analysis, and code execution. Be helpful, clear, and concise. Cite sources when using web search." },
+      ...msgHistory
+    ];
+    
+    let response = "";
+    
+    if (webSearch && text.toLowerCase().includes("search") || text.toLowerCase().includes("what is") || text.toLowerCase().includes("who is") || text.toLowerCase().includes("latest")) {
+      // Perplexity-style web search
+      response = await webSearchMsg(text);
+    } else {
+      // Direct model chat via API
+      const res = await fetch(`${API}/v1/chat/stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${getToken()}` },
+        body: JSON.stringify({ messages, provider, model, stream: true })
+      });
+      
+      if (res.ok) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value);
+          response += chunk;
+          msgDiv.querySelector(".bubble").innerHTML = formatContent(response) + "<span class='streaming'>";
+        }
+      } else {
+        response = "[NexusClaw API not running. Start with: python3 apps/api/main.py]";
+      }
+    }
+    
+    msgDiv.querySelector(".bubble").innerHTML = formatContent(response);
+    msgHistory.push({ role: "assistant", content: response });
+  } catch (e) {
+    msgDiv.querySelector(".bubble").innerHTML = "Error: " + e.message;
+  }
+}
+
+async function webSearchMsg(query) {
+  // Perplexity-style: fetch search results + answer
+  try {
+    const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`);
+    const data = await res.json();
+    const results = data.RelatedTopics?.slice(0, 5).map((r, i) => `[${i+1}] ${r.Text}`).join("\n") || "No results.";
+    return `**Web Search: ${query}**\n\n${results}\n\nBased on search results, here's what I found:\n\n`;
+  } catch {
+    return "[Web search unavailable — check internet connection]";
+  }
+}
+
+function uploadFile() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API}/v1/files/upload`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${getToken()}` },
+      body: formData
+    });
+    const data = await res.json();
+    addMsg("nexus", `📎 File uploaded: ${file.name} (${data.fileId ? "ID: " + data.fileId + " — indexing..." : "upload failed"})`);
+  };
+  input.click();
+}
+
+function toggleSearch() {
+  webSearch = !webSearch;
+  event.target.style.borderColor = webSearch ? "var(--accent)" : "";
+  event.target.style.color = webSearch ? "var(--accent)" : "";
+}
+
+function toggleVoice() {
+  if (!voiceInput) {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.onresult = e => { document.getElementById("msg-input").value += " " + e.results[0][0].transcript; };
+    recognition.start();
+    voiceInput = { active: true, recognition };
+    event.target.style.borderColor = "var(--accent)";
+    event.target.style.color = "var(--accent)";
+  } else {
+    voiceInput.recognition.stop();
+    voiceInput = false;
+    event.target.style.borderColor = "";
+    event.target.style.color = "";
+  }
+}
+
+// Simple token storage (demo)
+function getToken() {
+  if (!window._nexusToken) {
+    // Demo mode: auto-login as guest
+    window._nexusToken = "demo-token";
+  }
+  return window._nexusToken;
+}
+
+document.getElementById("new-chat").addEventListener("click", () => {
+  msgHistory = [];
+  document.getElementById("chat").innerHTML = "";
+  document.getElementById("chat").innerHTML = '<div id="empty"><h2>NexusClaw OpenRoom</h2><p>Ask anything. Search the web. Upload files. No restrictions.</p></div>';
+});
+</script>
+</body>
+</html>
