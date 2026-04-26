@@ -1,0 +1,25 @@
+{
+  "heartbeat_interval_minutes": 5,
+  "reflection": {
+    "min_interval_minutes": 30,
+    "pivotal_threshold": "pivotal",
+    "notable_batch_threshold": 5
+  },
+  "brain": {
+    "consolidation": {"enabled": true, "significance_threshold": 7},
+    "anchor_audit": {"enabled": true, "check_interval_minutes": 60},
+    "curiosity": {"enabled": true}
+  },
+  "governance": {
+    "level": "autonomous",
+    "auto_apply_keywords": ["growth", "learning", "improvement"]
+  },
+  "research": {
+    "keyword_file": "~/.nexusclaw/keywords.json",
+    "interval_minutes": 30
+  },
+  "rss": {
+    "enabled": true,
+    "poll_interval_heartbeats": 6
+  }
+}
