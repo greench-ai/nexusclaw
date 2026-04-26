@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, AsyncIterator, AsyncGenerator
 
 app = FastAPI(title="NexusClaw API", version="0.3.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
