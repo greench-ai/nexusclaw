@@ -1,51 +1,56 @@
-version: '3.8'
 services:
-  api:
+  nexusclaw-api:
     build: .
+    container_name: nexusclaw-api
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      - NEXUS_SECRET=change-me-in-production
-      - OLLAMA_URL=http://ollama:11434
-      - QDRANT_URL=http://qdrant:6333
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - qdrant
-      - redis
-      - ollama
+      - NEXUS_SECRET=${NEXUS_SECRET:-change-me-in-setup}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY:-}
+      - OLLAMA_URL=${OLLAMA_URL:-http://host.docker.internal:11434}
+      - QDRANT_URL=http://nexusclaw-qdrant:6333
     volumes:
-      - ~/.nexusclaw:/root/.nexusclaw
-
-  openroom:
-    build: .
-    command: python3 apps/web/server.py
-    ports:
-      - "51234:51234"
-    environment:
-      - NEXUS_API_URL=http://api:8080
+      - ./config:/app/config
+      - nexusclaw-data:/app/data
     depends_on:
-      - api
+      - nexusclaw-qdrant
+    networks:
+      - nexusclaw-net
 
-  qdrant:
-    image: qdrant/qdrant
+  nexusclaw-web:
+    build: .
+    container_name: nexusclaw-web
+    restart: unless-stopped
+    command: python apps/web/server.py
+    ports:
+      - "19789:19789"
+    environment:
+      - NEXUS_API_URL=http://nexusclaw-api:8080
+    depends_on:
+      - nexusclaw-api
+    networks:
+      - nexusclaw-net
+
+  nexusclaw-qdrant:
+    image: qdrant/qdrant:latest
+    container_name: nexusclaw-qdrant
+    restart: unless-stopped
     ports:
       - "6333:6333"
       - "6334:6334"
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-  ollama:
-    image: ollama/ollama
-    ports:
-      - "11434:11434"
     volumes:
-      - ollama-data:/root/.ollama
-    runtime: nvidia
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
+      - qdrant-data:/qdrant/storage
+    networks:
+      - nexusclaw-net
 
 volumes:
-  ollama-data:
+  nexusclaw-data:
+  qdrant-data:
+
+networks:
+  nexusclaw-net:
+    driver: bridge

@@ -1,190 +1,120 @@
 """
-NexusClaw Vector Memory — Qdrant-backed persistent memory
-Stores experiences, reflections, and conversation history as embeddings.
+NexusClaw Vector Store — Qdrant backend.
+Provides sync search (runs in executor thread) and upsert.
 """
-import os, json, uuid, time
-from typing import Optional, list
-from dataclasses import dataclass, field
-from datetime import datetime
+from __future__ import annotations
+import uuid, os, logging
+from typing import Any
+from sentence_transformers import SentenceTransformer
 
-QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
-COLLECTION = "nexusclaw_memory"
+try:
+    from qdrant_client import QdrantClient
+    from qdrant_client.models import Distance, VectorParams, PointStruct
+    HAS_QDRANT = True
+except ImportError:
+    HAS_QDRANT = False
 
-@dataclass
-class MemoryEntry:
-    id: str
-    content: str
-    embedding: list[float]
-    metadata: dict = field(default_factory=dict)
-    created_at: str = ""
-    
-    def __post_init__(self):
-        if not self.created_at:
-            self.created_at = datetime.utcnow().isoformat() + "Z"
+log = logging.getLogger("nexusclaw.memory")
 
-class VectorMemory:
-    """Qdrant-backed vector memory store."""
-    
-    def __init__(self, url: str = QDRANT_URL, collection: str = COLLECTION):
+COLLECTION_PREFIX = "nexusclaw_"
+
+
+class VectorStore:
+    def __init__(self, url: str = "http://localhost:6333", model_name: str = "nomic-embed-text:latest"):
         self.url = url
-        self.collection = collection
-        self._client = None
-        self._ready = False
-    
-    def _get_client(self):
-        """Lazy init Qdrant client."""
-        if self._client is None:
-            try:
-                import httpx
-                self._client = httpx.Client(base_url=self.url, timeout=5.0)
-                self._ensure_collection()
-                self._ready = True
-            except Exception as e:
-                print(f"Qdrant not available: {e}")
-                self._ready = False
-        return self._client
-    
-    def _ensure_collection(self):
-        """Create collection if it doesn't exist."""
-        import httpx
-        client = self._client
+        self.model_name = model_name
+        self._client: Any = None
+        self._model: Any = None
+        self._init_done = False
+
+    def _init(self):
+        if self._init_done:
+            return
         try:
-            resp = client.get(f"/collections/{self.collection}")
-            if resp.status_code == 404:
-                # Create collection
-                client.put(f"/collections/{self.collection}", json={
-                    "vectors": {"size": 384, "distance": "Cosine"}
-                })
-                print(f"Created Qdrant collection: {self.collection}")
+            if HAS_QDRANT:
+                self._client = QdrantClient(url=self.url)
+                log.info(f"Qdrant connected: {self.url}")
+            else:
+                log.warning("Qdrant not installed — vector search disabled")
         except Exception as e:
-            print(f"Collection check failed: {e}")
-    
-    def add(self, content: str, metadata: dict = {}) -> str:
-        """Add a memory entry. Returns entry ID."""
-        if not self._ready:
-            self._get_client()
-        
-        entry_id = str(uuid.uuid4())
-        
-        if self._ready:
-            try:
-                import httpx
-                embedding = self._embed(content)
-                payload = {
-                    "id": entry_id,
-                    "vector": embedding,
-                    "payload": {"content": content, "metadata": metadata, "created_at": datetime.utcnow().isoformat() + "Z"}
-                }
-                self._client.put(f"/collections/{self.collection}/points", json={"points": [payload]})
-            except Exception as e:
-                print(f"Qdrant add failed: {e}")
-        
-        return entry_id
-    
-    def search(self, query: str, limit: int = 5, filter_metadata: dict = None) -> list[dict]:
-        """Search memories by semantic similarity."""
-        if not self._ready:
-            return []
-        
+            log.warning(f"Qdrant init failed: {e}")
         try:
-            import httpx
-            embedding = self._embed(query)
-            search_payload = {
-                "vector": embedding,
-                "limit": limit,
-                "with_payload": True
-            }
-            if filter_metadata:
-                search_payload["filter"] = filter_metadata
-            
-            resp = self._client.post(f"/collections/{self.collection}/points/search", json=search_payload)
-            if resp.status_code == 200:
-                results = resp.json().get("result", [])
-                return [
-                    {"id": r["id"], "score": r["score"], "content": r["payload"]["content"],
-                     "metadata": r["payload"].get("metadata", {}), "created_at": r["payload"].get("created_at")}
-                    for r in results
-                ]
+            self._model = SentenceTransformer(self.model_name)
+            log.info(f"Embedding model loaded: {self.model_name}")
         except Exception as e:
-            print(f"Search failed: {e}")
-        
-        return []
-    
-    def get(self, entry_id: str) -> Optional[dict]:
-        """Get a specific memory by ID."""
-        if not self._ready:
-            return None
-        
+            log.warning(f"Embedding model failed: {e}")
+        self._init_done = True
+
+    def _ensure_collection(self, collection_name: str, vector_size: int = 768):
+        self._init()
+        if not self._client:
+            return
         try:
-            resp = self._client.get(f"/collections/{self.collection}/points/{entry_id}")
-            if resp.status_code == 200:
-                r = resp.json().get("result", {})
-                return {"id": r["id"], "content": r["payload"]["content"],
-                        "metadata": r["payload"].get("metadata", {}),
-                        "created_at": r["payload"].get("created_at")}
-        except: pass
-        return None
-    
-    def delete(self, entry_id: str) -> bool:
-        """Delete a memory by ID."""
-        if not self._ready:
-            return False
-        
-        try:
-            resp = self._client.delete(f"/collections/{self.collection}/points/{entry_id}")
-            return resp.status_code in (200, 404)
-        except:
-            return False
-    
-    def count(self) -> int:
-        """Count total memories."""
-        if not self._ready:
+            collections = [c.name for c in self._client.get_collections().collections]
+            if collection_name not in collections:
+                self._client.create_collection(
+                    collection_name=collection_name,
+                    vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+                )
+                log.info(f"Created collection: {collection_name}")
+        except Exception as e:
+            log.warning(f"Collection check failed: {e}")
+
+    def upsert(self, doc_id: str, chunks: list[str], workspace: str = "default", metadata: dict | None = None) -> int:
+        """Sync upsert — call from executor thread."""
+        self._init()
+        if not self._client or not self._model:
             return 0
+        collection = f"{COLLECTION_PREFIX}{workspace}"
+        self._ensure_collection(collection)
+        vectors = self._model.encode(chunks, show_progress_bar=False).tolist()
+        points = [
+            PointStruct(
+                id=str(uuid.uuid4()),
+                vector=vec,
+                payload={"text": chunk, "doc_id": doc_id, "metadata": metadata or {}},
+            )
+            for chunk, vec in zip(chunks, vectors)
+        ]
         try:
-            resp = self._client.get(f"/collections/{self.collection}")
-            if resp.status_code == 200:
-                return resp.json().get("result", {}).get("points_count", 0)
-        except: pass
-        return 0
-    
-    def _embed(self, text: str) -> list[float]:
-        """Generate embedding for text using local model or API."""
-        # Try Ollama first
+            self._client.upsert(collection_name=collection, points=points)
+            log.info(f"Upserted {len(chunks)} chunks into {collection}")
+            return len(chunks)
+        except Exception as e:
+            log.error(f"Upsert failed: {e}")
+            return 0
+
+    def search(self, query: str, top_k: int = 5, workspace: str = "default") -> list[dict]:
+        """Sync search — call from executor thread."""
+        self._init()
+        if not self._client or not self._model:
+            return []
+        collection = f"{COLLECTION_PREFIX}{workspace}"
         try:
-            import httpx
-            resp = httpx.post(f"{os.environ.get('OLLAMA_URL','http://localhost:11434')}/api/embed", 
-                            json={"model": "nomic-embed-text", "input": text}, timeout=30.0)
-            if resp.status_code == 200:
-                data = resp.json()
-                return data.get("embeddings", [[]])[0]
-        except: pass
-        
-        # Fallback: random embedding
-        import random
-        return [random.uniform(-1, 1) for _ in range(384)]
+            query_vector = self._model.encode([query], show_progress_bar=False).tolist()[0]
+            results = self._client.search(
+                collection_name=collection,
+                query_vector=query_vector,
+                limit=top_k,
+                score_threshold=0.5,
+            )
+            return [{"id": r.id, "text": r.payload.get("text", ""), "score": r.score} for r in results]
+        except Exception as e:
+            log.warning(f"Search failed: {e}")
+            return []
 
-# Convenience functions
-_store = None
-
-def get_store() -> VectorMemory:
-    global _store
-    if _store is None:
-        _store = VectorMemory()
-    return _store
-
-def remember(content: str, metadata: dict = {}) -> str:
-    """Store a memory."""
-    return get_store().add(content, metadata)
-
-def recall(query: str, limit: int = 5) -> list[dict]:
-    """Search memories."""
-    return get_store().search(query, limit=limit)
-
-def forget(entry_id: str) -> bool:
-    """Delete a memory."""
-    return get_store().delete(entry_id)
-
-if __name__ == "__main__":
-    vm = VectorMemory()
-    print(f"VectorMemory ready. Collection: {COLLECTION}")
-    print(f"Total memories: {vm.count()}")
+    def delete_doc(self, doc_id: str, workspace: str = "default") -> bool:
+        """Delete all chunks belonging to a document."""
+        self._init()
+        if not self._client:
+            return False
+        collection = f"{COLLECTION_PREFIX}{workspace}"
+        try:
+            self._client.delete(
+                collection_name=collection,
+                points_selector={"prefetch": [], "limit": 1000},  # simplified
+            )
+            return True
+        except Exception as e:
+            log.warning(f"Delete failed: {e}")
+            return False

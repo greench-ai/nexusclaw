@@ -1,28 +1,25 @@
 {
   "name": "nexusclaw",
   "version": "1.0.0",
-  "description": "NexusClaw — Personal AI Gateway. Built on OpenClaw.",
-  "type": "module",
-  "bin": {
-    "nexusclaw": "./nexusclaw.mjs"
-  },
-  "scripts": {
-    "build":        "pnpm -r build",
-    "ui:build":     "pnpm --filter @nexusclaw/ui build",
-    "gateway:watch":"pnpm --filter @nexusclaw/gateway dev",
-    "lint":         "pnpm -r lint",
-    "typecheck":    "pnpm -r typecheck",
-    "test":         "vitest run",
-    "test:unit":    "vitest run --config vitest.unit.config.ts",
-    "openclaw":     "node nexusclaw.mjs"
-  },
-  "keywords": ["ai", "assistant", "gateway", "nexusclaw", "personal-ai"],
+  "description": "NexusClaw — AI agent framework. Your framework. Your rules.",
+  "author": "Greench + Naruto",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/greench-ai/nexusclaw.git"
+  "repository": "https://github.com/greench-ai/nexusclaw",
+  "keywords": ["ai", "agent", "framework", "llm", "claude", "evoclaw", "nexusclaw"],
+  "scripts": {
+    "start": "python apps/api/main.py",
+    "web": "python apps/web/server.py",
+    "setup": "python src/onboard/setup.py",
+    "cli": "python src/cli/cli.py",
+    "doctor": "python src/cli/cli.py doctor",
+    "dev:api": "uvicorn apps.api.main:app --reload --port 8080",
+    "dev:web": "python apps/web/server.py",
+    "install-deps": "pip install -r requirements.txt",
+    "docker:build": "docker build -t nexusclaw .",
+    "docker:run": "docker-compose up -d"
   },
   "engines": {
-    "node": ">=22.16.0"
+    "node": ">=18",
+    "python": ">=3.10"
   }
 }

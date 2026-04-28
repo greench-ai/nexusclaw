@@ -1,25 +1,30 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
 # Install system deps
-RUN apt-get update && apt-get install -y \
-    curl git nodejs npm \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl git build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python deps
-COPY pyproject.toml requirements.txt* ./
-RUN pip install --no-cache-dir -r requirements.txt 2>/dev/null || true
+# Copy requirements first (for caching)
+COPY requirements.txt .
 
-# Copy source
+# Install Python deps
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Playwright (optional)
+RUN pip install --no-cache-dir playwright \
+    && python -m playwright install chromium --with-deps 2>/dev/null || true
+
+# Copy app
 COPY . .
 
-# Download Ollama (optional)
-RUN if command -v curl; then \
-    curl -fsSL https://ollama.com/install.sh | sh; \
-    fi
+# Create nexusclaw user dir
+RUN mkdir -p /root/.nexusclaw
 
-EXPOSE 8080 51234
+# Expose ports
+EXPOSE 8080 19789
 
-# Default: run API
-CMD ["python3", "apps/api/main.py"]
+# Default: start API
+CMD ["python", "apps/api/main.py"]

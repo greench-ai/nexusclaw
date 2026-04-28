@@ -5,868 +5,924 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NexusClaw — Your framework. Your rules.</title>
 <style>
-/* === RESET & VARS === */
+/* === RESET & TOKENS === */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
-  --bg: #000;
-  --sidebar-bg: #111;
-  --sidebar-border: #1a1a1a;
-  --surface: #161616;
-  --surface-hover: #1e1e1e;
-  --border: #2a2a2a;
-  --text: #fff;
-  --text-2: #888;
-  --text-3: #555;
-  --accent: #7c3aed;
-  --accent-light: #a78bfa;
-  --accent-dim: rgba(124, 58, 237, 0.12);
-  --radius: 10px;
+  --bg: #000; --sidebar-bg: #0a0a0a; --sidebar-border: #1a1a1a;
+  --surface: #111; --surface-hover: #1a1a1a; --border: #222;
+  --text: #fff; --text-2: #888; --text-3: #444;
+  --accent: #7c3aed; --accent-light: #a78bfa; --accent-glow: rgba(124,58,237,0.15);
+  --danger: #ef4444; --success: #22c55e; --warning: #f59e0b;
+  --radius: 8px; --radius-lg: 12px;
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --sidebar-w: 260px;
 }
-
 html, body { height: 100%; overflow: hidden; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); display: flex; }
 
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  display: flex;
-}
+/* === SCROLLBARS === */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-3); border-radius: 2px; }
 
 /* === SIDEBAR === */
 .sidebar {
-  width: var(--sidebar-w);
-  min-width: var(--sidebar-w);
+  width: var(--sidebar-w); min-width: var(--sidebar-w);
   background: var(--sidebar-bg);
   border-right: 1px solid var(--sidebar-border);
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
+  display: flex; flex-direction: column;
+  height: 100dvh; overflow: hidden;
 }
-
 .sidebar-header {
-  padding: 16px;
-  border-bottom: 1px solid var(--sidebar-border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  padding: 14px 16px; border-bottom: 1px solid var(--sidebar-border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
 }
-
-.sidebar-logo {
-  font-size: 20px;
-  font-weight: 700;
+.logo {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.3px;
   background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  flex: 1;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  flex: 1; user-select: none;
 }
-
-.sidebar-logo span {
-  font-size: 11px;
-  display: block;
-  font-weight: 400;
-  -webkit-text-fill-color: var(--text-3);
-  letter-spacing: 0.5px;
-}
-
+.logo small { display: block; font-size: 9px; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; -webkit-text-fill-color: var(--text-3); }
 .new-chat-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--accent);
-  border: none;
-  color: white;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: background 0.15s;
+  width: 30px; height: 30px; border-radius: 7px;
+  background: var(--accent); border: none; color: white;
+  font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; flex-shrink: 0;
 }
+.new-chat-btn:hover { background: var(--accent-light); transform: scale(1.05); }
 
-.new-chat-btn:hover { background: var(--accent-light); }
-
-.session-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
+.sidebar-search { padding: 10px 12px; border-bottom: 1px solid var(--sidebar-border); flex-shrink: 0; }
+.sidebar-search input {
+  width: 100%; padding: 7px 10px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-size: 13px; outline: none;
 }
+.sidebar-search input:focus { border-color: var(--accent); }
+.sidebar-search input::placeholder { color: var(--text-3); }
 
-.session-list::-webkit-scrollbar { width: 4px; }
-.session-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
+/* Sessions list */
+.sidebar-scroll { flex: 1; overflow-y: auto; padding: 8px 8px; }
+.session-group { margin-bottom: 16px; }
+.session-group-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-3); padding: 4px 8px 6px; cursor: pointer; user-select: none;
+}
+.session-group-label:hover { color: var(--text-2); }
 .session-item {
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--text-2);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 2px;
-  transition: background 0.1s, color 0.1s;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border-radius: var(--radius); cursor: pointer; transition: background 0.1s;
+  font-size: 13px; color: var(--text-2); overflow: hidden;
 }
-
 .session-item:hover { background: var(--surface-hover); color: var(--text); }
-.session-item.active { background: var(--accent-dim); color: var(--accent-light); }
-.session-item .s-icon { font-size: 15px; flex-shrink: 0; }
-.session-item .s-title { overflow: hidden; text-overflow: ellipsis; }
+.session-item.active { background: var(--accent-glow); color: var(--accent-light); }
+.session-item-icon { font-size: 14px; flex-shrink: 0; }
+.session-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-item-delete { opacity: 0; font-size: 11px; color: var(--text-3); flex-shrink: 0; transition: opacity 0.1s; }
+.session-item:hover .session-item-delete { opacity: 1; }
+.session-item-delete:hover { color: var(--danger); }
 
-.sidebar-footer {
-  padding: 12px 16px;
-  border-top: 1px solid var(--sidebar-border);
-  display: flex;
-  gap: 8px;
+/* Bottom nav */
+.sidebar-nav {
+  border-top: 1px solid var(--sidebar-border); padding: 8px; flex-shrink: 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
 }
-
-.sidebar-btn {
-  flex: 1;
-  padding: 8px;
-  border-radius: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-2);
-  font-size: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: all 0.15s;
+.nav-btn {
+  display: flex; align-items: center; gap: 6px; padding: 8px 10px;
+  border-radius: var(--radius); cursor: pointer; font-size: 12px; color: var(--text-2);
+  background: none; border: none; width: 100%; text-align: left; transition: all 0.1s;
 }
+.nav-btn:hover { background: var(--surface-hover); color: var(--text); }
+.nav-btn.active { background: var(--accent-glow); color: var(--accent-light); }
+.nav-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 
-.sidebar-btn:hover { background: var(--surface-hover); color: var(--text); }
-
-/* === MAIN CONTENT === */
+/* === MAIN AREA === */
 .main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  overflow: hidden;
+  flex: 1; display: flex; flex-direction: column;
+  height: 100dvh; overflow: hidden; position: relative;
 }
 
-/* === TOPBAR === */
+/* === TOP BAR === */
 .topbar {
-  padding: 12px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 56px;
+  display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+  border-bottom: 1px solid var(--border); background: var(--bg);
+  flex-shrink: 0; flex-wrap: wrap;
 }
+.topbar-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
 
-.chat-title {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text);
-  border: none;
-  background: transparent;
-  outline: none;
-  font-family: var(--font);
+/* Selects */
+select {
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  padding: 5px 8px; border-radius: var(--radius); font-size: 12px; outline: none;
+  cursor: pointer; appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 6px center;
+  padding-right: 22px;
 }
+select:focus { border-color: var(--accent); }
 
-.chat-title::placeholder { color: var(--text-3); }
-
-.topbar-actions {
-  display: flex;
-  gap: 6px;
+/* Toggles */
+.toggle-btn {
+  display: flex; align-items: center; gap: 5px; padding: 5px 10px;
+  border-radius: 20px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--text-2); font-size: 11px; cursor: pointer; transition: all 0.15s;
 }
+.toggle-btn:hover { border-color: var(--text-3); color: var(--text); }
+.toggle-btn.on { background: var(--accent-glow); border-color: var(--accent); color: var(--accent-light); }
 
-.icon-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-2);
-  cursor: pointer;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-}
+/* Status dot */
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); }
+.status-dot.ok { background: var(--success); }
+.status-dot.warn { background: var(--warning); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-.icon-btn:hover { background: var(--surface); color: var(--text); border-color: var(--text-3); }
-
-/* === MESSAGES === */
-.messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.messages::-webkit-scrollbar { width: 6px; }
-.messages::-webkit-scrollbar-track { background: transparent; }
-.messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-.msg {
-  max-width: 720px;
-  width: 100%;
-  margin: 0 auto;
-  animation: msgIn 0.2s ease;
-}
-
-@keyframes msgIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.msg.user { display: flex; justify-content: flex-end; }
-.msg.assistant { display: flex; justify-content: flex-start; }
-
-.bubble {
-  padding: 12px 16px;
-  border-radius: 16px;
-  font-size: 14px;
-  line-height: 1.65;
-  word-break: break-word;
-}
-
-.msg.user .bubble {
-  background: var(--accent);
-  color: #fff;
-  border-bottom-right-radius: 4px;
-  max-width: 85%;
-}
-
-.msg.assistant .bubble {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-bottom-left-radius: 4px;
-}
-
-.msg.assistant .bubble p { margin-bottom: 10px; }
-.msg.assistant .bubble p:last-child { margin-bottom: 0; }
-.msg.assistant .bubble strong { color: var(--text); }
-.msg.assistant .bubble em { color: var(--text-2); }
-.msg.assistant .bubble a { color: var(--accent-light); }
-
-.msg.assistant .bubble pre {
-  background: #000;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin: 10px 0;
-  overflow-x: auto;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.msg.assistant .bubble code {
-  background: rgba(255,255,255,0.07);
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.msg.assistant .bubble pre code {
-  background: none;
-  padding: 0;
-}
-
-.msg .meta {
-  font-size: 11px;
-  color: var(--text-3);
-  margin-top: 6px;
-  padding: 0 4px;
-}
-
-.msg.user .meta { text-align: right; }
-
-/* === WELCOME === */
+/* === CHAT AREA === */
+.chat-area { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 0; }
 .welcome {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 40px 24px;
-  text-align: center;
+  max-width: 640px; margin: auto; width: 100%; padding: 40px 0; text-align: center;
 }
-
-.welcome-logo {
-  font-size: 48px;
-  margin-bottom: 8px;
+.welcome h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; background: linear-gradient(135deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.welcome p { color: var(--text-2); font-size: 14px; margin-bottom: 24px; }
+.welcome-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: left; }
+.welcome-card {
+  padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-lg);
+  cursor: pointer; transition: all 0.15s; background: var(--surface);
 }
+.welcome-card:hover { border-color: var(--accent); background: var(--accent-glow); }
+.welcome-card-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.welcome-card-desc { font-size: 11px; color: var(--text-2); }
 
-.welcome h1 {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, #fff, #888);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* Message */
+.message { max-width: 720px; width: 100%; margin: 0 auto; padding: 12px 0; }
+.message.role-user { }
+.message.role-assistant { background: var(--bg); }
+.message-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.message-avatar { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.role-user .message-avatar { background: var(--accent); color: white; }
+.role-assistant .message-avatar { background: var(--surface-hover); border: 1px solid var(--border); }
+.message-meta { font-size: 11px; color: var(--text-3); }
+.message-content { font-size: 14px; line-height: 1.7; color: var(--text); }
+.message-content pre {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px 14px; overflow-x: auto; margin: 10px 0; font-size: 13px; line-height: 1.5;
 }
-
-.welcome p {
-  color: var(--text-2);
-  font-size: 15px;
-  line-height: 1.6;
-  margin-bottom: 24px;
+.message-content code {
+  background: var(--surface); padding: 2px 5px; border-radius: 4px; font-size: 12.5px;
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; color: var(--accent-light);
 }
-
-.quick-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 32px;
+.message-content pre code { background: none; padding: 0; color: var(--text); }
+.message-content p { margin: 8px 0; }
+.message-content ul, .message-content ol { padding-left: 20px; margin: 8px 0; }
+.message-content li { margin: 4px 0; }
+.message-content blockquote {
+  border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text-2); margin: 10px 0;
 }
-
-.quick-btn {
-  padding: 8px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  color: var(--text-2);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s;
+.message-content a { color: var(--accent-light); text-decoration: none; }
+.message-content a:hover { text-decoration: underline; }
+.message-content table { border-collapse: collapse; margin: 10px 0; width: 100%; }
+.message-content th, .message-content td { border: 1px solid var(--border); padding: 6px 10px; font-size: 13px; }
+.message-content th { background: var(--surface); }
+.message-actions { display: flex; gap: 8px; margin-top: 8px; opacity: 0; transition: opacity 0.1s; }
+.message:hover .message-actions { opacity: 1; }
+.msg-action {
+  font-size: 11px; color: var(--text-3); cursor: pointer; padding: 3px 8px;
+  border-radius: 4px; background: none; border: none; transition: all 0.1s;
 }
+.msg-action:hover { background: var(--surface-hover); color: var(--text-2); }
 
-.quick-btn:hover { background: var(--surface-hover); color: var(--text); border-color: var(--text-3); }
-
-.models-row {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-bottom: 32px;
+/* Thinking block */
+.thinking {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 14px; margin: 8px 0; font-size: 12px; color: var(--text-2);
+  font-family: 'SF Mono', monospace; line-height: 1.6;
 }
+.thinking-header { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--warning); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-.model-chip {
-  padding: 6px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  font-size: 12px;
-  color: var(--text-3);
-  cursor: pointer;
-  transition: all 0.15s;
-}
+/* === TYPING INDICATOR === */
+.typing { display: flex; gap: 4px; padding: 4px 0; }
+.typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); animation: typing 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: 0.2s; }
+.typing span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typing { 0%,100%{transform:translateY(0);opacity:1} 50%{transform:translateY(-4px);opacity:0.4} }
 
-.model-chip:hover, .model-chip.selected {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--accent-light);
-}
-
-.status-row {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  font-size: 12px;
-  color: var(--text-3);
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-
-.dot-green { background: #22c55e; }
-.dot-yellow { background: #eab308; }
-.dot-red { background: #ef4444; }
-.dot-grey { background: var(--text-3); }
-
-/* === INPUT === */
+/* === INPUT AREA === */
 .input-area {
-  padding: 16px 24px 20px;
-  border-top: 1px solid var(--border);
+  padding: 12px 20px 16px; border-top: 1px solid var(--border);
+  background: var(--bg); flex-shrink: 0;
 }
-
-.input-wrapper {
-  max-width: 720px;
-  margin: 0 auto;
-  display: flex;
-  gap: 10px;
-  align-items: flex-end;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 8px 8px 8px 16px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+.input-container {
+  max-width: 720px; margin: 0 auto;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); transition: border-color 0.15s;
 }
-
-.input-wrapper:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-dim);
+.input-container:focus-within { border-color: var(--accent); }
+.input-row { display: flex; align-items: flex-end; padding: 10px 14px; gap: 10px; }
+#message-input {
+  flex: 1; background: none; border: none; color: var(--text); font-size: 14px;
+  resize: none; max-height: 200px; outline: none; line-height: 1.5; font-family: var(--font);
 }
-
-#input {
-  flex: 1;
-  background: transparent;
-  border: none;
-  color: var(--text);
-  font-size: 14px;
-  font-family: var(--font);
-  resize: none;
-  max-height: 160px;
-  outline: none;
-  line-height: 1.5;
-  padding: 6px 0;
+#message-input::placeholder { color: var(--text-3); }
+.input-actions { display: flex; align-items: center; gap: 6px; }
+.icon-btn {
+  width: 32px; height: 32px; border-radius: 7px; border: none; background: none;
+  color: var(--text-3); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s; font-size: 16px;
 }
-
-#input::placeholder { color: var(--text-3); }
-
+.icon-btn:hover { background: var(--surface-hover); color: var(--text-2); }
 .send-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: var(--accent);
-  border: none;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.15s;
+  width: 34px; height: 34px; border-radius: 8px; background: var(--accent); border: none;
+  color: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; font-size: 15px;
 }
+.send-btn:hover { background: var(--accent-light); transform: scale(1.05); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.input-footer { display: flex; align-items: center; justify-content: space-between; padding: 4px 14px 8px; font-size: 10px; color: var(--text-3); }
 
-.send-btn:hover:not(:disabled) { background: var(--accent-light); transform: scale(1.05); }
-.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.input-hint {
-  text-align: center;
-  font-size: 11px;
-  color: var(--text-3);
-  margin-top: 8px;
-  max-width: 720px;
-  margin-left: auto;
-  margin-right: auto;
+/* === MODALS === */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
 }
-
-/* === LOADING === */
-.loading-msg {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-3);
-  font-size: 13px;
-  padding: 8px 0;
+.modal-overlay.open { opacity: 1; pointer-events: auto; }
+.modal {
+  background: var(--sidebar-bg); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  width: min(560px, 95vw); max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  transform: scale(0.95); transition: transform 0.2s;
 }
+.modal-overlay.open .modal { transform: scale(1); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-close { width: 28px; height: 28px; border-radius: 6px; border: none; background: none; color: var(--text-2); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.modal-close:hover { background: var(--surface-hover); }
+.modal-body { flex: 1; overflow-y: auto; padding: 20px; }
+.modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
 
-.loading-dots { display: flex; gap: 4px; }
-.loading-dots span {
-  width: 6px;
-  height: 6px;
-  background: var(--text-3);
-  border-radius: 50%;
-  animation: dotPulse 1.4s infinite;
+/* Settings form */
+.setting { margin-bottom: 20px; }
+.setting-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+.setting-desc { font-size: 11px; color: var(--text-3); margin-bottom: 6px; }
+.setting input[type="text"], .setting input[type="password"] {
+  width: 100%; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--text); font-size: 13px; outline: none;
 }
-.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes dotPulse {
-  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
-}
-
-/* === SETTINGS PANEL === */
-.panel-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: 100;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-}
-
-.panel-overlay.open { opacity: 1; pointer-events: all; }
-
-.panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 320px;
-  background: var(--sidebar-bg);
-  border-left: 1px solid var(--border);
-  z-index: 101;
-  transform: translateX(100%);
-  transition: transform 0.25s ease;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.panel.open { transform: translateX(0); }
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.panel-header h2 { font-size: 15px; font-weight: 600; }
-
-.panel-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-.panel-body::-webkit-scrollbar { width: 4px; }
-.panel-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-.setting {
-  margin-bottom: 24px;
-}
-
-.setting label {
-  display: block;
-  font-size: 11px;
-  color: var(--text-3);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
-
-.setting select,
-.setting input[type="text"],
-.setting input[type="number"] {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: var(--font);
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.setting select:focus,
 .setting input:focus { border-color: var(--accent); }
-.setting select option { background: var(--surface); }
+.setting-row { display: flex; gap: 12px; }
+.setting-row .setting { flex: 1; }
 
-/* Mobile */
-@media (max-width: 768px) {
-  :root { --sidebar-w: 0px; }
-  .sidebar { display: none; }
-  .msg { max-width: 100%; }
-  .bubble { font-size: 15px; }
-  .topbar { padding: 10px 16px; }
-  .messages { padding: 14px 16px; }
-  .input-area { padding: 12px 16px 16px; }
-  .panel { width: 100%; }
+/* Buttons */
+.btn {
+  padding: 8px 16px; border-radius: var(--radius); font-size: 13px; cursor: pointer;
+  border: none; transition: all 0.15s; font-family: var(--font);
 }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { background: var(--accent-light); }
+.btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--surface-hover); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { opacity: 0.9; }
+
+/* === SKILLS PANEL === */
+.panel { display: none; flex-direction: column; height: 100%; }
+.panel.active { display: flex; }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.panel-title { font-size: 16px; font-weight: 600; }
+.panel-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.skill-card {
+  border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px;
+  margin-bottom: 10px; cursor: pointer; transition: all 0.15s; background: var(--surface);
+}
+.skill-card:hover { border-color: var(--accent); background: var(--accent-glow); }
+.skill-name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.skill-desc { font-size: 12px; color: var(--text-2); }
+.skill-tags { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+.skill-tag { font-size: 10px; padding: 2px 7px; border-radius: 20px; background: var(--surface-hover); color: var(--text-3); }
+
+/* === MEMORY PANEL === */
+.memory-item {
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; margin-bottom: 8px;
+  background: var(--surface); font-size: 13px;
+}
+.memory-item-meta { font-size: 10px; color: var(--text-3); margin-bottom: 4px; }
+.memory-query-result { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+
+/* === HIDDEN === */
+.hidden { display: none !important; }
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .welcome-grid { grid-template-columns: 1fr; }
+  .topbar { padding: 8px 12px; }
+}
+
+/* === TOAST === */
+#toast {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 10px 16px; border-radius: var(--radius);
+  font-size: 13px; color: var(--text);
+  opacity: 0; transform: translateY(10px);
+  transition: all 0.2s;
+  pointer-events: none;
+  max-width: 300px;
+}
+#toast.show { opacity: 1; transform: translateY(0); }
+#toast.success { border-color: var(--success); }
+#toast.error { border-color: var(--danger); }
 </style>
 </head>
 <body>
 
 <!-- SIDEBAR -->
-<div class="sidebar">
+<aside class="sidebar">
   <div class="sidebar-header">
-    <div class="sidebar-logo">
-      ⚡ NexusClaw
-      <span>YOUR FRAMEWORK</span>
-    </div>
-    <button class="new-chat-btn" onclick="newChat()" title="New chat">+</button>
+    <div class="logo">NexusClaw<small>v1.0</small></div>
+    <button class="new-chat-btn" onclick="newChat()" title="New chat (Ctrl+N)">+</button>
   </div>
-  <div class="session-list" id="sessionList"></div>
-  <div class="sidebar-footer">
-    <button class="sidebar-btn" onclick="toggleSettings()">⚙️ Settings</button>
-    <button class="sidebar-btn" onclick="showStatus()">📊 Status</button>
+  <div class="sidebar-search">
+    <input type="text" placeholder="Search chats..." id="chat-search" oninput="filterSessions(this.value)">
   </div>
-</div>
+  <div class="sidebar-scroll" id="sessions-list"></div>
+  <div class="sidebar-nav">
+    <button class="nav-btn" onclick="switchPanel('chat')" id="nav-chat" data-panel="chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Chat
+    </button>
+    <button class="nav-btn" onclick="switchPanel('skills')" id="nav-skills" data-panel="skills">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Skills
+    </button>
+    <button class="nav-btn" onclick="switchPanel('memory')" id="nav-memory" data-panel="memory">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Memory
+    </button>
+    <button class="nav-btn" onclick="openSettings()" id="nav-settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </button>
+  </div>
+</aside>
 
 <!-- MAIN -->
-<div class="main">
+<main class="main">
+
+  <!-- TOP BAR -->
   <div class="topbar">
-    <input class="chat-title" id="chatTitle" value="New conversation" placeholder="Conversation name..." onchange="saveTitle()" />
-    <div class="topbar-actions">
-      <button class="icon-btn" onclick="toggleSettings()" title="Settings">⚙️</button>
-      <button class="icon-btn" onclick="newChat()" title="New chat">✕</button>
+    <div class="topbar-left">
+      <select id="provider-select" onchange="updateModels()">
+        <option value="openrouter">OpenRouter</option>
+        <option value="openai">OpenAI</option>
+        <option value="anthropic">Anthropic</option>
+        <option value="ollama">Ollama</option>
+      </select>
+      <select id="model-select">
+        <option value="qwen/qwen3.5-plus">qwen3.5-plus (default)</option>
+        <option value="qwen/qwen3-32b">qwen3-32b</option>
+        <option value="anthropic/claude-3.5-sonnet-latest">Claude 3.5 Sonnet</option>
+        <option value="openai/gpt-4o">GPT-4o</option>
+      </select>
+      <select id="soul-select">
+        <option value="assistant">Assistant</option>
+        <option value="coder">Coder</option>
+        <option value="researcher">Researcher</option>
+      </select>
+    </div>
+    <div class="topbar-right">
+      <button class="toggle-btn on" id="toggle-rag" onclick="toggleRag()">
+        <span>📚</span> RAG
+      </button>
+      <button class="toggle-btn" id="toggle-tools" onclick="toggleTools()">
+        <span>🛠️</span> Tools
+      </button>
+      <div class="status-dot ok" id="status-dot" title="Connected"></div>
     </div>
   </div>
 
-  <div class="messages" id="messages">
-    <!-- Welcome screen -->
-    <div class="welcome">
-      <div class="welcome-logo">⚡</div>
-      <h1>NexusClaw</h1>
-      <p>Your framework. Your rules.<br>Configure your AI and start building.</p>
-      <div class="quick-actions">
-        <button class="quick-btn" onclick="quickPrompt('Write a Python function that...')">Write code</button>
-        <button class="quick-btn" onclick="quickPrompt('Explain this concept:')">Explain something</button>
-        <button class="quick-btn" onclick="quickPrompt('Research:')">Research topic</button>
-        <button class="quick-btn" onclick="quickPrompt('Debug this code:')">Debug code</button>
+  <!-- CHAT PANEL -->
+  <div class="panel active" id="panel-chat">
+    <div class="chat-area" id="chat-area">
+      <div class="welcome" id="welcome">
+        <h1>NexusClaw</h1>
+        <p>Your framework. Your rules. — Select a model above and start chatting.</p>
+        <div class="welcome-grid">
+          <div class="welcome-card" onclick="sendQuick('Explain quantum computing in simple terms')">
+            <div class="welcome-card-title">💡 Explain</div>
+            <div class="welcome-card-desc">Break down complex topics simply</div>
+          </div>
+          <div class="welcome-card" onclick="sendQuick('Write a Python script to backup mySQL database')">
+            <div class="welcome-card-title">💻 Code</div>
+            <div class="welcome-card-desc">Write, debug, or review code</div>
+          </div>
+          <div class="welcome-card" onclick="sendQuick('Research the latest developments in AI agents')">
+            <div class="welcome-card-title">🔍 Research</div>
+            <div class="welcome-card-desc">Deep dive with web search</div>
+          </div>
+          <div class="welcome-card" onclick="sendQuick('Help me plan a trip to Tokyo')">
+            <div class="welcome-card-title">✈️ Plan</div>
+            <div class="welcome-card-desc">Itineraries, budgets, tips</div>
+          </div>
+          <div class="welcome-card" onclick="sendQuick('Analyze the latest Bitcoin market trends')">
+            <div class="welcome-card-title">📊 Analyze</div>
+            <div class="welcome-card-desc">Data, charts, insights</div>
+          </div>
+          <div class="welcome-card" onclick="switchPanel('skills')">
+            <div class="welcome-card-title">🎯 Skills</div>
+            <div class="welcome-card-desc">Run specialized skill agents</div>
+          </div>
+        </div>
       </div>
-      <div class="models-row" id="modelRow"></div>
-      <div class="status-row">
-        <div class="status-item"><span class="status-dot dot-grey" id="apiDot"></span><span id="apiStatus">Checking API...</span></div>
-        <div class="status-item"><span class="status-dot dot-grey" id="ollamaDot"></span><span id="ollamaStatus">Ollama...</span></div>
-        <div class="status-item" id="modelStatusItem"><span id="modelStatus">—</span></div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="input-area">
+      <div class="input-container">
+        <div class="input-row">
+          <textarea id="message-input" rows="1" placeholder="Message NexusClaw..." onkeydown="onInputKey(event)" oninput="autoResize(this)"></textarea>
+          <div class="input-actions">
+            <button class="icon-btn" onclick="attachFile()" title="Attach file">📎</button>
+            <button class="send-btn" id="send-btn" onclick="sendMessage()">➤</button>
+          </div>
+        </div>
+        <div class="input-footer">
+          <span>Ctrl+Enter to send &nbsp;·&nbsp; NexusClaw v1.0</span>
+          <span id="char-count"></span>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="input-area">
-    <div class="input-wrapper">
-      <textarea id="input" rows="1" placeholder="Message NexusClaw..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()">↑</button>
+  <!-- SKILLS PANEL -->
+  <div class="panel" id="panel-skills">
+    <div class="panel-header">
+      <span class="panel-title">🎯 Skills</span>
+      <button class="btn btn-secondary" onclick="loadSkills()">↻ Refresh</button>
     </div>
-    <div class="input-hint">NexusClaw · Press Enter to send · Shift+Enter for new line · Ctrl+M for voice</div>
+    <div class="panel-body" id="skills-list">
+      <div class="skill-card" onclick="runSkill('web-search')">
+        <div class="skill-name">🌐 Web Search</div>
+        <div class="skill-desc">Deep web research with real-time search</div>
+        <div class="skill-tags"><span class="skill-tag">research</span><span class="skill-tag">search</span></div>
+      </div>
+      <div class="skill-card" onclick="runSkill('self-improving-agent')">
+        <div class="skill-name">🧬 Self-Improving Agent</div>
+        <div class="skill-desc">Meta-improvement — improve how it improves</div>
+        <div class="skill-tags"><span class="skill-tag">evoclaw</span><span class="skill-tag">meta</span></div>
+      </div>
+      <div class="skill-card" onclick="runSkill('arc-security-audit')">
+        <div class="skill-name">🔒 Arc Security Audit</div>
+        <div class="skill-desc">Scan codebase for vulnerabilities</div>
+        <div class="skill-tags"><span class="skill-tag">security</span><span class="skill-tag">audit</span></div>
+      </div>
+      <div class="skill-card" onclick="runSkill('agent-autopilot')">
+        <div class="skill-name">🤖 Agent Autopilot</div>
+        <div class="skill-desc">Autonomous maintenance and monitoring</div>
+        <div class="skill-tags"><span class="skill-tag">autonomy</span><span class="skill-tag">automation</span></div>
+      </div>
+      <div class="skill-card" onclick="runSkill('morning-briefing')">
+        <div class="skill-name">🌅 Morning Briefing</div>
+        <div class="skill-desc">Daily news, weather, and status report</div>
+        <div class="skill-tags"><span class="skill-tag">daily</span><span class="skill-tag">news</span></div>
+      </div>
+      <div class="skill-card" onclick="runSkill('frontend-design')">
+        <div class="skill-name">🎨 Frontend Design</div>
+        <div class="skill-desc">Generate UI from description</div>
+        <div class="skill-tags"><span class="skill-tag">design</span><span class="skill-tag">ui</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEMORY PANEL -->
+  <div class="panel" id="panel-memory">
+    <div class="panel-header">
+      <span class="panel-title">🧠 Memory</span>
+    </div>
+    <div class="panel-body">
+      <div class="setting" style="margin-bottom:16px">
+        <input type="text" id="memory-query" placeholder="Query your long-term memory..." style="width:100%;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;outline:none" onkeydown="if(event.key==='Enter')queryMemory()">
+        <button class="btn btn-primary" style="margin-top:8px" onclick="queryMemory()">Search Memory</button>
+      </div>
+      <div id="memory-results"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeModal('settings-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">⚙️ Settings</span>
+      <button class="modal-close" onclick="closeModal('settings-modal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting">
+        <label class="setting-label">Provider</label>
+        <select id="s-provider" onchange="saveSettings()">
+          <option value="openrouter">OpenRouter</option>
+          <option value="openai">OpenAI</option>
+          <option value="anthropic">Anthropic</option>
+          <option value="ollama">Ollama</option>
+        </select>
+      </div>
+      <div class="setting">
+        <label class="setting-label">API Key</label>
+        <div class="setting-desc">Your API key is stored locally and never sent to third parties.</div>
+        <input type="password" id="s-api-key" placeholder="sk-..." onchange="saveSettings()">
+      </div>
+      <div class="setting">
+        <label class="setting-label">Model</label>
+        <input type="text" id="s-model" placeholder="qwen/qwen3.5-plus" value="qwen/qwen3.5-plus" onchange="saveSettings()">
+      </div>
+      <div class="setting">
+        <label class="setting-label">Soul</label>
+        <select id="s-soul" onchange="saveSettings()">
+          <option value="assistant">Assistant — Helpful and balanced</option>
+          <option value="coder">Coder — Technical and precise</option>
+          <option value="researcher">Researcher — Deep and thorough</option>
+        </select>
+      </div>
+      <div class="setting">
+        <label class="setting-label">Vector Memory</label>
+        <select id="s-vector-db" onchange="saveSettings()">
+          <option value="qdrant">Qdrant (default)</option>
+          <option value="chroma">ChromaDB</option>
+          <option value="lancedb">LanceDB</option>
+        </select>
+      </div>
+      <div class="setting">
+        <label class="setting-label">EvoClaw Self-Evolution</label>
+        <select id="s-evoclaw" onchange="saveSettings()">
+          <option value="true">Enabled</option>
+          <option value="false">Disabled</option>
+        </select>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+      <div class="setting">
+        <label class="setting-label">System</label>
+        <div style="font-size:12px;color:var(--text-2)">
+          <div>Version: <strong>1.0.0</strong></div>
+          <div>API: <strong id="api-status">Checking...</strong></div>
+          <div>Memory: <strong id="memory-status">Checking...</strong></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('settings-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings();closeModal('settings-modal')">Save</button>
+    </div>
   </div>
 </div>
 
-<!-- SETTINGS PANEL -->
-<div class="panel-overlay" id="panelOverlay" onclick="toggleSettings()"></div>
-<div class="panel" id="settingsPanel">
-  <div class="panel-header">
-    <h2>⚙️ Settings</h2>
-    <button class="icon-btn" onclick="toggleSettings()">✕</button>
-  </div>
-  <div class="panel-body">
-    <div class="setting">
-      <label>AI Provider</label>
-      <select id="selProvider" onchange="saveSettings()">
-        <option value="ollama">🤖 Ollama (local, free)</option>
-        <option value="openai">✨ OpenAI (GPT-4o)</option>
-        <option value="anthropic">🧠 Anthropic (Claude)</option>
-        <option value="minimaxi">⚡ Minimaxi (fast, cheap)</option>
-        <option value="openrouter">🌐 OpenRouter (100+ models)</option>
-      </select>
-    </div>
-    <div class="setting">
-      <label>Model</label>
-      <input type="text" id="selModel" value="llama3.2" placeholder="e.g. llama3.2, gpt-4o" onchange="saveSettings()" />
-    </div>
-    <div class="setting">
-      <label>Soul / Persona</label>
-      <select id="selSoul" onchange="saveSettings()">
-        <option value="">Default</option>
-        <option value="blank">Blank — pure assistant</option>
-        <option value="assistant">Assistant — helpful & friendly</option>
-        <option value="coder">Coder — programming expert</option>
-        <option value="researcher">Researcher — deep analysis</option>
-      </select>
-    </div>
-    <div class="setting">
-      <label>Temperature — <span id="tempVal">0.7</span></label>
-      <input type="range" id="selTemp" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('tempVal').textContent=this.value; saveSettings()" />
-    </div>
-    <div class="setting">
-      <label>Max Tokens</label>
-      <input type="number" id="selMaxTokens" value="4096" min="256" max="8192" step="256" onchange="saveSettings()" />
-    </div>
-    <div class="setting">
-      <label>🤖 Machine Access</label>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-        <button class="icon-btn" onclick="lsDir()" title="Browse files" style="width:auto;padding:0 10px;font-size:12px">📁 LS</button>
-        <button class="icon-btn" onclick="runShell()" title="Shell" style="width:auto;padding:0 10px;font-size:12px">⌨ Shell</button>
-        <button class="icon-btn" onclick="sysInfo()" title="System" style="width:auto;padding:0 10px;font-size:12px">💻 Sys</button>
-      </div>
-    </div>
-    <div class="setting">
-      <label>🌐 Browser</label>
-      <div style="display:flex;gap:6px;margin-top:6px">
-        <input type="text" id="browserUrl" placeholder="https://..." style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:13px">
-        <button class="icon-btn" onclick="browserNav()" style="width:auto;padding:0 10px;font-size:12px">→</button>
-        <button class="icon-btn" onclick="browserShot()" style="width:auto;padding:0 10px;font-size:12px">📸</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script>
-const API = 'http://localhost:8080';
-let sessionId = localStorage.getItem('nexus_session') || 'main_' + Date.now().toString(36);
-let ws = null;
-let streaming = false;
-let currentModel = 'ollama';
-let settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+const API_BASE = 'http://localhost:8080';
+let state = {
+  sessionId: null,
+  messages: [],
+  streaming: false,
+  rag: true,
+  tools: false,
+  provider: 'openrouter',
+  model: 'qwen/qwen3.5-plus',
+  soul: 'assistant',
+  sessions: [],
+  token: null,
+};
 
-function loadSettings() {
-  if (!settings.provider) settings = {provider: 'ollama', model: 'llama3.2', soul: '', temp: 0.7, maxTokens: 4096};
-  document.getElementById('selProvider').value = settings.provider;
-  document.getElementById('selModel').value = settings.model || 'llama3.2';
-  document.getElementById('selSoul').value = settings.soul || '';
-  document.getElementById('selTemp').value = settings.temp || 0.7;
-  document.getElementById('tempVal').textContent = settings.temp || 0.7;
-  document.getElementById('selMaxTokens').value = settings.maxTokens || 4096;
-  document.getElementById('modelStatus').textContent = settings.provider + '/' + settings.model;
-  currentModel = settings.provider;
-}
-
-function saveSettings() {
-  settings.provider = document.getElementById('selProvider').value;
-  settings.model = document.getElementById('selModel').value;
-  settings.soul = document.getElementById('selSoul').value;
-  settings.temp = parseFloat(document.getElementById('selTemp').value);
-  settings.maxTokens = parseInt(document.getElementById('selMaxTokens').value);
-  localStorage.setItem('nexus_settings', JSON.stringify(settings));
-  document.getElementById('modelStatus').textContent = settings.provider + '/' + settings.model;
-  currentModel = settings.provider;
-}
-
-loadSettings();
-
-// ─── WEBSOCKET ────────────────────────────────────────────────
-function connectWS() {
-  if (ws && ws.readyState <= 1) return;
-  ws = new WebSocket(`ws://${location.host}/ws/${sessionId}`);
-  ws.onopen = () => setStatus('api', 'online', 'green');
-  ws.onclose = () => { setStatus('api', 'reconnecting...', 'yellow'); setTimeout(connectWS, 3000); };
-  ws.onerror = () => setStatus('api', 'error', 'red');
-  ws.onmessage = e => {
-    const d = JSON.parse(e.data);
-    if (d.type === 'chunk') {
-      streaming = true;
-      const last = document.querySelector('.msg.assistant:last-child .bubble');
-      if (last) last.innerHTML += formatContent(d.content);
-      scrollBottom();
-    } else if (d.type === 'done') {
-      streaming = false;
-      document.getElementById('sendBtn').disabled = false;
-    } else if (d.type === 'error') {
-      const last = document.querySelector('.msg.assistant:last-child .bubble');
-      if (last) last.innerHTML = `<p style="color:#ef4444">Error: ${d.content}</p>`;
-      document.getElementById('sendBtn').disabled = false;
-      streaming = false;
-    }
-  };
-}
-
-// ─── CHAT ──────────────────────────────────────────────────────
-async function sendMessage() {
-  const input = document.getElementById('input');
-  const msg = input.value.trim();
-  if (!msg || streaming) return;
-  
-  hideWelcome();
-  
-  addMsg('user', msg);
-  input.value = '';
-  input.style.height = 'auto';
-  
-  document.getElementById('sendBtn').disabled = true;
-  
-  // Empty assistant msg
-  const aid = addMsg('assistant', '<div class="loading-msg"><div class="loading-dots"><span></span><span></span><span></span></div>Thinking...</div>');
-  
-  scrollBottom();
-  
-  if (!ws || ws.readyState > 1) connectWS();
-  
-  if (ws.readyState === 1) {
-    ws.send(JSON.stringify({
-      type: 'chat', content: msg,
-      provider: settings.provider, model: settings.model,
-      soul: settings.soul, temperature: settings.temp,
-      maxTokens: settings.maxTokens
-    }));
-  } else {
-    await httpStream(msg, aid);
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+async function init() {
+  loadSettings();
+  checkHealth();
+  await loadSessions();
+  // Auto-login as guest if no token
+  if (!state.token) {
+    await guestLogin();
   }
 }
 
-async function httpStream(message, aid) {
+async function guestLogin() {
   try {
-    const resp = await fetch(`${API}/v1/chat/answer/stream`, {
+    const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({sessionId, message, provider: settings.provider, model: settings.model})
+      body: JSON.stringify({email: `guest_${Date.now()}@nexus.local`, password: 'guest', display_name: 'Guest'}),
     });
-    
-    if (!resp.ok) {
-      setBubble(aid, `<p style="color:#ef4444">API error ${resp.status}. Is the API running?</p>`);
-      return;
+    if (res.ok) {
+      const data = await res.json();
+      state.token = data.token;
     }
-    
-    const reader = resp.body.getReader();
+  } catch(e) {
+    // API might not be running — continue anyway
+    state.token = 'guest';
+  }
+}
+
+async function checkHealth() {
+  try {
+    const res = await fetch(`${API_BASE}/health`);
+    if (res.ok) {
+      const h = await res.json();
+      document.getElementById('api-status').textContent = '✓ Online';
+      document.getElementById('api-status').style.color = 'var(--success)';
+      document.getElementById('memory-status').textContent = h.memory || 'unknown';
+      document.getElementById('memory-status').style.color = 'var(--success)';
+      document.getElementById('status-dot').className = 'status-dot ok';
+    } else {
+      throw new Error('not ok');
+    }
+  } catch {
+    document.getElementById('api-status').textContent = '✗ Offline';
+    document.getElementById('api-status').style.color = 'var(--danger)';
+    document.getElementById('memory-status').textContent = '✗ Offline';
+    document.getElementById('memory-status').style.color = 'var(--danger)';
+    document.getElementById('status-dot').className = 'status-dot warn';
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SESSIONS
+// ══════════════════════════════════════════════
+async function loadSessions() {
+  if (!state.token || state.token === 'guest') return;
+  try {
+    const res = await fetch(`${API_BASE}/sessions`, {headers: authHeaders()});
+    if (res.ok) state.sessions = await res.json();
+  } catch {}
+  renderSessions();
+}
+
+function renderSessions() {
+  const el = document.getElementById('sessions-list');
+  const now = new Date();
+  const today = now.toDateString();
+  const yesterday = new Date(now - 86400000).toDateString();
+
+  const groups = {};
+  state.sessions.forEach(s => {
+    const d = new Date(s.updated_at || s.created_at).toDateString();
+    const label = d === today ? 'Today' : d === yesterday ? 'Yesterday' : 'Older';
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(s);
+  });
+
+  let html = '';
+  for (const [label, sessions] of Object.entries(groups)) {
+    html += `<div class="session-group"><div class="session-group-label">${label}</div>`;
+    sessions.forEach(s => {
+      const active = s.id === state.sessionId ? 'active' : '';
+      html += `<div class="session-item ${active}" onclick="loadSession('${s.id}')">
+        <span class="session-item-icon">💬</span>
+        <span class="session-item-title">${escHtml(s.title || 'Untitled')}</span>
+        <span class="session-item-delete" onclick="event.stopPropagation();deleteSession('${s.id}')">✕</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  el.innerHTML = html || '<div style="padding:16px;text-align:center;color:var(--text-3);font-size:12px">No sessions yet</div>';
+}
+
+async function loadSession(id) {
+  if (!state.token) return;
+  state.sessionId = id;
+  try {
+    const res = await fetch(`${API_BASE}/sessions/${id}`, {headers: authHeaders()});
+    if (res.ok) {
+      const data = await res.json();
+      state.messages = data.messages || [];
+      renderMessages();
+    }
+  } catch {}
+  renderSessions();
+}
+
+async function deleteSession(id) {
+  if (!state.token) return;
+  try {
+    await fetch(`${API_BASE}/sessions/${id}`, {method: 'DELETE', headers: authHeaders()});
+    if (state.sessionId === id) newChat();
+    await loadSessions();
+  } catch {}
+}
+
+function newChat() {
+  state.sessionId = null;
+  state.messages = [];
+  renderMessages();
+  document.getElementById('message-input').focus();
+  renderSessions();
+}
+
+function filterSessions(q) {
+  // Simple filter — just re-render with visible items
+  const items = document.querySelectorAll('.session-item');
+  items.forEach(el => {
+    const text = el.querySelector('.session-item-title').textContent.toLowerCase();
+    el.style.display = text.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ══════════════════════════════════════════════
+//  MESSAGES
+// ══════════════════════════════════════════════
+function renderMessages() {
+  const area = document.getElementById('chat-area');
+  const welcome = document.getElementById('welcome');
+
+  if (state.messages.length === 0) {
+    welcome.style.display = '';
+    // Remove all message divs
+    area.querySelectorAll('.message').forEach(el => el.remove());
+    return;
+  }
+  welcome.style.display = 'none';
+
+  let html = '';
+  state.messages.forEach((m, i) => {
+    html += messageHtml(m, i);
+  });
+  // Replace all message divs
+  area.querySelectorAll('.message').forEach(el => el.remove());
+  area.insertAdjacentHTML('beforeend', html);
+  scrollToBottom();
+}
+
+function messageHtml(m, idx) {
+  const avatar = m.role === 'user' ? '👤' : 'NC';
+  const cls = `role-${m.role}`;
+  let content = m.content || '';
+  // Basic markdown-ish rendering
+  content = renderMarkdown(content);
+  return `<div class="message ${cls}" data-idx="${idx}">
+    <div class="message-header">
+      <div class="message-avatar">${avatar}</div>
+      <span class="message-meta">${m.role === 'user' ? 'You' : 'NexusClaw'}</span>
+    </div>
+    <div class="message-content">${content}</div>
+    <div class="message-actions">
+      <button class="msg-action" onclick="copyMessage(${idx})">📋 Copy</button>
+      ${m.role === 'assistant' ? `<button class="msg-action" onclick="regenMessage(${idx})">↻ Retry</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderMarkdown(text) {
+  if (!text) return '';
+  // Escape HTML first
+  text = escHtml(text);
+  // Code blocks
+  text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    return `<pre><code class="lang-${lang}">${code.trim()}</code></pre>`;
+  });
+  // Inline code
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Bold
+  text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // Headers
+  text = text.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+  text = text.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+  text = text.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+  // Lists
+  text = text.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+  text = text.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+  // Blockquote
+  text = text.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+  // Links
+  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // Paragraphs
+  text = text.replace(/\n\n/g, '</p><p>');
+  text = `<p>${text}</p>`;
+  text = text.replace(/<p><\/p>/g, '');
+  return text;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function addMessage(role, content) {
+  state.messages.push({role, content, ts: new Date().toISOString()});
+  renderMessages();
+}
+
+function scrollToBottom() {
+  const area = document.getElementById('chat-area');
+  area.scrollTop = area.scrollHeight;
+}
+
+// ══════════════════════════════════════════════
+//  SEND
+// ══════════════════════════════════════════════
+async function sendMessage() {
+  const input = document.getElementById('message-input');
+  const text = input.value.trim();
+  if (!text || state.streaming) return;
+
+  state.streaming = true;
+  document.getElementById('send-btn').disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  addMessage('user', text);
+
+  const assistantMsg = {role: 'assistant', content: '', ts: new Date().toISOString()};
+  state.messages.push(assistantMsg);
+  renderMessages();
+
+  const msgIdx = state.messages.length - 1;
+  const area = document.getElementById('chat-area');
+  const msgEl = area.querySelector(`.message[data-idx="${msgIdx}"]`);
+  const contentEl = msgEl?.querySelector('.message-content');
+  if (contentEl) contentEl.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+
+  try {
+    const stream = state.provider === 'anthropic';
+    const res = await fetch(`${API_BASE}/chat/stream`, {
+      method: 'POST',
+      headers: {...authHeaders(), 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        session_id: state.sessionId,
+        message: text,
+        provider: state.provider,
+        model: state.model,
+        stream: true,
+        use_rag: state.rag,
+      }),
+    });
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let full = '';
-    
+
     while (true) {
       const {done, value} = await reader.read();
       if (done) break;
-      const text = decoder.decode(value, {stream: true});
-      for (const line of text.split('\n')) {
+      const chunk = decoder.decode(value);
+      for (const line of chunk.split('\n')) {
         if (line.startsWith('data: ')) {
           try {
-            const d = JSON.parse(line.slice(6));
-            if (d.type === 'chunk') {
-              full += d.content;
-              setBubble(aid, formatContent(full));
-              scrollBottom();
+            const data = JSON.parse(line.slice(6));
+            if (data.token && !data.done) {
+              full += data.token;
+              if (contentEl) contentEl.textContent = full;
+              scrollToBottom();
             }
           } catch {}
         }
       }
+      // Update session ID from header
+      const sid = res.headers.get('X-Session-Id');
+      if (sid && !state.sessionId) state.sessionId = sid;
     }
-  } catch(e) {
-    setBubble(aid, `<p style="color:#ef4444">Connection failed: ${e.message}</p><p style="color:#888;font-size:12px;margin-top:8px">Start API: <code style="background:rgba(255,255,255,.07);padding:2px 6px;border-radius:4px">python3 apps/api/main.py</code></p>`);
+
+    assistantMsg.content = full;
+    state.sessionId = state.sessionId || res.headers.get('X-Session-Id') || state.sessionId;
+  } catch(err) {
+    if (contentEl) contentEl.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}. Make sure NexusClaw API is running on port 8080.</span>`;
+    toast('API error — check that the server is running', 'error');
   }
-  
-  document.getElementById('sendBtn').disabled = false;
-  streaming = false;
+
+  state.streaming = false;
+  document.getElementById('send-btn').disabled = false;
+  await loadSessions();
 }
 
-function addMsg(role, content) {
-  const div = document.createElement('div');
-  div.className = 'msg ' + role;
-  div.innerHTML = `<div class="bubble">${content}</div><div class="meta">${role === 'user' ? 'You' : 'NexusClaw'} · just now</div>`;
-  document.getElementById('messages').appendChild(div);
-  scrollBottom();
-  return div;
+function sendQuick(text) {
+  document.getElementById('message-input').value = text;
+  sendMessage();
 }
 
-function setBubble(el, html) {
-  el.querySelector('.bubble').innerHTML = html;
+async function regenMessage(idx) {
+  if (idx > 0) {
+    const prevMsg = state.messages[idx - 1];
+    if (prevMsg?.role === 'user') {
+      state.messages = state.messages.slice(0, idx - 1);
+      sendMessage();
+    }
+  }
 }
 
-function hideWelcome() {
-  const w = document.querySelector('.welcome');
-  if (w) w.style.display = 'none';
+function copyMessage(idx) {
+  const text = state.messages[idx]?.content || '';
+  navigator.clipboard.writeText(text).then(() => toast('Copied!', 'success'));
 }
 
-function formatContent(text) {
-  let h = escapeHtml(text);
-  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  h = h.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, l, c) => `<pre><code class="lang-${l}">${c.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</code></pre>`);
-  h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
-  h = h.replace(/\n/g, '<br>');
-  return h;
-}
-
-function escapeHtml(t) {
-  const d = document.createElement('div');
-  d.textContent = t;
-  return d.innerHTML;
-}
-
-function scrollBottom() {
-  const m = document.getElementById('messages');
-  m.scrollTop = m.scrollHeight;
-}
-
-function handleKey(e) {
+// ══════════════════════════════════════════════
+//  INPUT
+// ══════════════════════════════════════════════
+function onInputKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
@@ -875,142 +931,221 @@ function handleKey(e) {
 
 function autoResize(el) {
   el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
 }
 
-function newChat() {
-  document.getElementById('messages').innerHTML = document.querySelector('.welcome').outerHTML;
-  document.querySelector('.welcome').style.display = 'block';
-  sessionId = 'main_' + Date.now().toString(36);
-  localStorage.setItem('nexus_session', sessionId);
-  document.getElementById('chatTitle').value = 'New conversation';
-  connectWS();
+// ══════════════════════════════════════════════
+//  PANELS
+// ══════════════════════════════════════════════
+function switchPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${name}`)?.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`nav-${name}`)?.classList.add('active');
+
+  if (name === 'skills') loadSkills();
 }
 
-function saveTitle() {
-  localStorage.setItem('nexus_title_' + sessionId, document.getElementById('chatTitle').value);
+function toggleRag() {
+  state.rag = !state.rag;
+  const btn = document.getElementById('toggle-rag');
+  btn.classList.toggle('on', state.rag);
+  toast(`RAG ${state.rag ? 'enabled' : 'disabled'}`);
 }
 
-function quickPrompt(text) {
-  document.getElementById('input').value = text;
-  document.getElementById('input').focus();
+function toggleTools() {
+  state.tools = !state.tools;
+  const btn = document.getElementById('toggle-tools');
+  btn.classList.toggle('on', state.tools);
+  toast(`Tools ${state.tools ? 'enabled' : 'disabled'}`);
 }
 
-// ─── STATUS ────────────────────────────────────────────────────
-function setStatus(which, text, color) {
-  const dot = document.getElementById(which + 'Dot');
-  const txt = document.getElementById(which + 'Status');
-  if (dot) dot.className = 'status-dot dot-' + color;
-  if (txt) txt.textContent = text;
+function updateModels() {
+  state.provider = document.getElementById('provider-select').value;
+  const sel = document.getElementById('model-select');
+  const models = {
+    openrouter: [
+      {v:'qwen/qwen3.5-plus', n:'qwen3.5-plus (fast)'},
+      {v:'qwen/qwen3-32b', n:'qwen3-32b'},
+      {v:'anthropic/claude-3.5-sonnet-latest', n:'Claude 3.5 Sonnet'},
+      {v:'openai/gpt-4o', n:'GPT-4o'},
+    ],
+    openai: [
+      {v:'gpt-4o', n:'GPT-4o'},
+      {v:'gpt-4o-mini', n:'GPT-4o mini'},
+      {v:'gpt-4-turbo', n:'GPT-4 Turbo'},
+    ],
+    anthropic: [
+      {v:'claude-3-5-sonnet-20241022', n:'Claude 3.5 Sonnet'},
+      {v:'claude-3-opus-latest', n:'Claude 3 Opus'},
+      {v:'claude-3-haiku-latest', n:'Claude 3 Haiku'},
+    ],
+    ollama: [
+      {v:'llama3.2', n:'llama3.2'},
+      {v:'qwen2.5', n:'qwen2.5'},
+      {v:'codellama', n:'CodeLLama'},
+    ],
+  };
+  sel.innerHTML = (models[state.provider] || []).map(m => `<option value="${m.v}">${m.n}</option>`).join('');
+  state.model = sel.value;
 }
 
-async function checkStatus() {
+// ══════════════════════════════════════════════
+//  SKILLS
+// ══════════════════════════════════════════════
+async function loadSkills() {
   try {
-    const r = await fetch(`${API}/health`, {signal: AbortSignal.timeout(3000)});
-    if (r.ok) setStatus('api', 'API online', 'green'); else setStatus('api', `error ${r.status}`, 'red');
-  } catch { setStatus('api', 'offline', 'red'); }
-  
+    const res = await fetch(`${API_BASE}/skills`, {headers: authHeaders()});
+    if (res.ok) {
+      const skills = await res.json();
+      // Skills are rendered statically in HTML for now
+    }
+  } catch {}
+}
+
+async function runSkill(name) {
+  toast(`Running skill: ${name}...`);
   try {
-    const r = await fetch('http://localhost:11434/api/tags', {signal: AbortSignal.timeout(3000)});
-    if (r.ok) {
-      const d = await r.json();
-      setStatus('ollama', `${d.models.length} models`, 'green');
-      // Update model chips
-      const row = document.getElementById('modelRow');
-      row.innerHTML = d.models.slice(0, 6).map(m => 
-        `<button class="model-chip${m.name === settings.model ? ' selected' : ''}" onclick="selectModel('ollama','${m.name}')">${m.name.split(':')[0]}</button>`
-      ).join('');
-    } else setStatus('ollama', 'error', 'red');
-  } catch { setStatus('ollama', 'offline', 'red'); }
+    const res = await fetch(`${API_BASE}/skills/run`, {
+      method: 'POST',
+      headers: {...authHeaders(), 'Content-Type': 'application/json'},
+      body: JSON.stringify({skill_name: name, params: {}}),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      addMessage('assistant', `Skill "${name}" result:\n\`\`\`\n${JSON.stringify(data, null, 2)}\n\`\`\``);
+      switchPanel('chat');
+    }
+  } catch(err) {
+    toast('Skill failed: ' + err.message, 'error');
+  }
 }
 
-function selectModel(provider, model) {
-  settings.provider = provider;
-  settings.model = model;
-  saveSettings();
-  document.querySelectorAll('.model-chip').forEach(b => b.classList.remove('selected'));
-  event.target.classList.add('selected');
-}
-
-// ─── SETTINGS PANEL ───────────────────────────────────────────
-function toggleSettings() {
-  const panel = document.getElementById('settingsPanel');
-  const overlay = document.getElementById('panelOverlay');
-  panel.classList.toggle('open');
-  overlay.classList.toggle('open');
-}
-
-function showStatus() {
-  checkStatus();
-  alert('Status checked — see the dots in the welcome screen');
-}
-
-// ─── MACHINE ───────────────────────────────────────────────────
-async function lsDir() {
-  const path = prompt('Directory path:', '/home/greench');
-  if (!path) return;
+// ══════════════════════════════════════════════
+//  MEMORY
+// ══════════════════════════════════════════════
+async function queryMemory() {
+  const q = document.getElementById('memory-query').value.trim();
+  if (!q) return;
+  const el = document.getElementById('memory-results');
+  el.innerHTML = '<div style="color:var(--text-2);font-size:13px">Searching...</div>';
   try {
-    const resp = await fetch(`${API}/v1/tools/ls?path=${encodeURIComponent(path)}`);
-    const d = await resp.json();
-    if (d.error) { alert(d.error); return; }
-    const items = (d.items || []).slice(0, 50);
-    alert(`${d.path}\n\n${items.map(i => `${i.type === 'dir' ? '📁' : '📄'} ${i.name}`).join('\n')}${d.items?.length > 50 ? '\n...and ' + (d.items.length - 50) + ' more' : ''}`);
-  } catch(e) { alert('Error: ' + e.message); }
+    const res = await fetch(`${API_BASE}/memory/query`, {
+      method: 'POST',
+      headers: {...authHeaders(), 'Content-Type': 'application/json'},
+      body: JSON.stringify({query: q, top_k: 10}),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (!data.results || data.results.length === 0) {
+        el.innerHTML = '<div style="color:var(--text-3);font-size:13px">No results found.</div>';
+      } else {
+        el.innerHTML = data.results.map(r => `<div class="memory-item">
+          <div class="memory-item-meta">Score: ${(r.score || 0).toFixed(3)}</div>
+          <div class="memory-query-result">${renderMarkdown(r.text || '')}</div>
+        </div>`).join('');
+      }
+    }
+  } catch(err) {
+    el.innerHTML = `<div style="color:var(--danger);font-size:13px">Error: ${err.message}</div>`;
+  }
 }
 
-async function runShell() {
-  const cmd = prompt('Shell command:');
-  if (!cmd) return;
+// ══════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════
+function openSettings() {
+  document.getElementById('settings-modal').classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function saveSettings() {
+  const cfg = {
+    provider: document.getElementById('s-provider').value,
+    apiKey: document.getElementById('s-api-key').value,
+    model: document.getElementById('s-model').value,
+    soul: document.getElementById('s-soul').value,
+    rag: state.rag,
+    tools: state.tools,
+  };
+  localStorage.setItem('nexusclaw_cfg', JSON.stringify(cfg));
+  state.provider = cfg.provider;
+  state.model = cfg.model;
+  state.soul = cfg.soul;
+  document.getElementById('provider-select').value = cfg.provider;
+  document.getElementById('model-select').value = cfg.model;
+  document.getElementById('soul-select').value = cfg.soul;
+  updateModels();
+  toast('Settings saved');
+}
+
+function loadSettings() {
   try {
-    const resp = await fetch(`${API}/v1/tools/shell?command=${encodeURIComponent(cmd)}`, {method:'POST'});
-    const d = await resp.json();
-    alert('stdout:\n' + (d.stdout || '(empty)') + '\n\nstderr:\n' + (d.stderr || '(empty)') + '\n\nexit: ' + d.returncode);
-  } catch(e) { alert('Error: ' + e.message); }
+    const cfg = JSON.parse(localStorage.getItem('nexusclaw_cfg') || '{}');
+    if (cfg.provider) {
+      state.provider = cfg.provider;
+      document.getElementById('provider-select').value = cfg.provider;
+      document.getElementById('model-select').value = cfg.model || 'qwen/qwen3.5-plus';
+      document.getElementById('soul-select').value = cfg.soul || 'assistant';
+      state.rag = cfg.rag !== undefined ? cfg.rag : true;
+      state.tools = cfg.tools || false;
+      document.getElementById('toggle-rag').classList.toggle('on', state.rag);
+      document.getElementById('toggle-tools').classList.toggle('on', state.tools);
+      updateModels();
+    }
+  } catch {}
 }
 
-async function sysInfo() {
-  try {
-    const resp = await fetch(`${API}/v1/tools/system`, {method:'POST'});
-    const d = await resp.json();
-    const s = d.system || {};
-    alert(`OS: ${s.os}\nHost: ${s.hostname}\nCPU: ${s.cpu_percent}% (${s.cpu_count} cores)\nRAM: ${s.memory_used_gb}GB / ${s.memory_total_gb}GB (${s.memory_percent}%)\nDisk: ${s.disk_percent}%`);
-  } catch(e) { alert('Error: ' + e.message); }
+// ══════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════
+function authHeaders() {
+  return state.token ? {'Authorization': `Bearer ${state.token}`} : {};
 }
 
-async function browserNav() {
-  const url = document.getElementById('browserUrl')?.value;
-  if (!url) return;
-  try {
-    const resp = await fetch(`${API}/v1/tools/browser/navigate?url=${encodeURIComponent(url)}`, {method:'POST'});
-    const d = await resp.json();
-    alert(d.ok ? `Loaded: ${d.title || url}` : 'Error: ' + (d.error || 'failed'));
-  } catch(e) { alert('Error: ' + e.message); }
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  setTimeout(() => el.className = '', 2500);
 }
 
-async function browserShot() {
-  try {
-    const resp = await fetch(`${API}/v1/tools/browser/screenshot`, {method:'POST'});
-    const d = await resp.json();
-    alert(d.ok ? `Screenshot: ${d.path}` : 'Error: ' + (d.error || 'failed'));
-  } catch(e) { alert('Error: ' + e.message); }
+function attachFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.onchange = async () => {
+    const file = input.files[0];
+    if (!file) return;
+    toast(`Uploading ${file.name}...`);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch(`${API_BASE}/files/upload`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: fd,
+      });
+      if (res.ok) toast(`Uploaded: ${file.name}`, 'success');
+      else toast('Upload failed', 'error');
+    } catch(err) {
+      toast('Upload failed: ' + err.message, 'error');
+    }
+  };
+  input.click();
 }
 
-// ─── INIT ──────────────────────────────────────────────────────
-connectWS();
-checkStatus();
-setInterval(checkStatus, 15000);
-document.getElementById('input').focus();
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); newChat(); }
+  if (e.key === 'Escape') { document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open')); }
+});
 
-// Voice
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const sr = new SR();
-  sr.lang = 'en-US';
-  document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.key === 'm') { e.preventDefault(); sr.start(); }
-  });
-  sr.onresult = ev => { document.getElementById('input').value = ev.results[0][0].transcript; };
-}
+// Init
+init();
+setInterval(checkHealth, 30000);
 </script>
 </body>
 </html>

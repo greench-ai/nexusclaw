@@ -1,200 +1,204 @@
-# NexusClaw
+# NexusClaw 🤖⚡
 
-**Your framework. Your rules. No restrictions.**
+> **Your framework. Your rules.**
 
-> Freedom-first unified AI agent framework. No locked features, no forced workflow, no correct way to use it. You define everything.
+NexusClaw is a self-hostable AI agent framework that combines the best ideas from Claude, EvoClaw, AnythingLLM, OpenWebUI, Perplexity, Antigravity, and Space Agent — with an OpenRoom-inspired UI.
 
-[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
-
----
-
-## Why NexusClaw?
-
-| Platform | Philosophy |
-|----------|-----------|
-| **Claude/GPT** | Use it our way. Pay us. |
-| **OpenAI Agents** | Use it our way. Pay us. |
-| **LangChain** | Write boilerplate forever. |
-| **OpenClaw** | Use any model, any channel, your rules. |
-| **NexusClaw** | OpenClaw + EvoClaw + Perplexity + AnythingLLM + OpenWebUI + OpenRoom = **You** |
-
-NexusClaw is OpenClaw's philosophy (user owns everything, local + cloud, no restrictions) with the features of every major AI platform combined into one coherent framework.
+No lock-in. No subscriptions. Your data, your infrastructure.
 
 ---
 
-## Features
+## ⚡ One-Line Install
 
-### 🤖 Providers (No Lock-in)
-- **Local**: Ollama (free, private, GPU optional)
-- **OpenAI**: GPT-4o, o1, o3, o1-mini
-- **Anthropic**: Claude 3.5 Sonnet, 3.5 Haiku
-- **Minimaxi**: M2.7-highspeed (fast + cheap)
-- **OpenRouter**: 100+ models via single API
-- **Custom**: Any OpenAI-compatible endpoint
+```bash
+curl -sL https://github.com/greench-ai/nexusclaw/raw/main/install.sh | bash
+```
 
-### 💬 Channels
-| Channel | Status |
-|---------|--------|
-| Web UI (OpenRoom) | ✅ Built |
-| CLI/Terminal | ✅ Built |
-| Telegram Bot | ✅ Built |
-| Discord Bot | ✅ Built |
-| Slack | 🏗️ Planned |
+Or on Windows:
+```powershell
+irm https://github.com/greench-ai/nexusclaw/raw/main/install.ps1 | iex
+```
 
-### 🧠 Memory
-| Type | Status |
-|------|--------|
-| Persistent (Qdrant vector DB) | ✅ Built |
-| Session only | ✅ Built |
-| Hybrid | ✅ Built |
-| RAG over documents | ✅ Built |
+Or with Docker:
+```bash
+git clone https://github.com/greench-ai/nexusclaw.git && cd nexusclaw && docker-compose up
+```
 
-### 🌀 Self-Evolution (EvoClaw)
-- Heartbeat every 5 minutes
-- Reflection on pivotal experiences
-- Research cycle (30-min keyword research)
-- RSS passive information stream
-- Brain organs: Consolidation, Anchor Audit, Curiosity Tracker
+---
 
-### 🔍 Tools
-| Tool | Status |
-|------|--------|
-| Perplexity-style web search | ✅ Built |
-| Code execution sandbox | ✅ Built |
-| File operations | ✅ Built |
-| Document Q&A (RAG) | ✅ Built |
-| Autonomous goals | ✅ Built |
-| Kill switch | ✅ Built |
+## ✨ Features
+
+### 🤖 AI & Agents
+- **Multi-provider**: OpenAI, Anthropic, Ollama, OpenRouter, Perplexity — all in one
+- **Multi-agent orchestration**: CEO-style task delegation to specialized agents
+- **Autonomous goals**: Set objectives, approve plans, let it execute
+- **Tool use**: Web search, code execution, file ops, browser control
+
+### 🧠 Memory & Knowledge
+- **Vector RAG**: Qdrant/ChromaDB/LanceDB for long-term knowledge
+- **Session memory**: Full conversation context per session
+- **Document ingestion**: PDF, DOCX, TXT, HTML, MD → searchable knowledge
+- **EvoClaw self-evolution**: Reflects on experiences, updates beliefs
 
 ### 🎭 Soul System
-- Blank, Assistant, Coder, Researcher templates
-- Write your own identity
-- Interactive soul editor
-- Hot-swap souls mid-conversation
+- **Hot-swappable personalities**: Assistant, Coder, Researcher, DevOps
+- **Identity editor**: Customize your AI's character and principles
+- **Template library**: Start from proven templates
 
-### 🛡️ Safety
-- Autonomous goals with task planning
-- Approval workflow for sensitive actions
-- Kill switch to pause all active goals
-- Tool permission system (public/trusted/private/blocked)
+### 🛠️ Skills & Workflows
+- **20+ built-in skills**: Web search, security audit, morning briefing, self-improvement, and more
+- **SKILL.md format**: OpenWebUI-compatible skill definitions
+- **Workflow engine**: Multi-step automation pipelines
+- **Skill marketplace**: Install skills from GitHub
 
-### 🔌 Plugin System
-- Hook-based architecture (like OpenClaw)
-- Templates for: channel, provider, tool, memory, theme
-- Easy plugin creation
+### 💬 Interface
+- **OpenRoom-inspired web UI**: Dark, minimal, modern
+- **WebSocket streaming**: Real-time responses
+- **REST API**: Integrate with anything
+- **CLI**: Full command-line control
+- **Channels**: Telegram + Discord bots
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
-# 1. Clone
+# 1. Install (one line)
+curl -sL https://github.com/greench-ai/nexusclaw/raw/main/install.sh | bash
+
+# 2. Configure (first time only)
+nexusclaw setup
+
+# 3. Start chatting
+nexusclaw chat
+
+# Or open the web UI
+open http://localhost:19789
+```
+
+---
+
+## 📦 What's Included
+
+| Component | Description |
+|-----------|-------------|
+| `install.sh` | One-line installer (Linux/macOS/WSL) |
+| `install.ps1` | Windows installer |
+| `docker-compose.yml` | Zero-dependency Docker setup |
+| `apps/api/` | FastAPI REST + WebSocket API server |
+| `apps/web/` | OpenRoom-inspired web UI |
+| `apps/channels/` | Telegram + Discord bot bridges |
+| `src/providers/` | Unified multi-provider LLM gateway |
+| `src/memory/` | Vector RAG + session memory |
+| `src/soul/` | Soul/personality engine |
+| `src/tools/` | Tool registry (search, code, browser) |
+| `src/evoclaw/` | Self-evolution (heartbeat, reflection, research) |
+| `src/autonomy/` | Goal planning + execution engine |
+| `src/skills/` | Skill system + marketplace |
+| `src/workflows/` | Workflow automation engine |
+| `src/agents/` | Multi-agent orchestration |
+| `skills/` | 20+ built-in skills |
+| `docs/blueprint/` | Full build blueprint |
+
+---
+
+## 🔧 Manual Install
+
+```bash
+git clone https://github.com/greench-ai/nexusclaw.git ~/nexusclaw
+cd ~/nexusclaw
+pip install -r requirements.txt
+python src/onboard/setup.py    # First-time wizard
+python apps/api/main.py         # Start API (port 8080)
+python apps/web/server.py        # Start Web UI (port 19789)
+```
+
+---
+
+## 🐳 Docker
+
+```bash
 git clone https://github.com/greench-ai/nexusclaw.git
 cd nexusclaw
-
-# 2. Setup (one-time wizard)
-python3 src/onboard/setup.py
-
-# 3. Start API
-python3 apps/api/main.py
-
-# 4. Open web UI
-python3 apps/web/server.py
-# Then open http://localhost:51234
-
-# Or use Docker
+cp .env.example .env  # Add your API keys
 docker-compose up
-```
-
-### CLI Usage
-
-```bash
-nexusclaw setup              # First-time configuration
-nexusclaw chat               # Interactive chat
-nexusclaw chat --provider openai --model gpt-4o
-nexusclaw soul --edit        # Edit soul interactively
-nexusclaw tools              # List all tools
-nexusclaw memory "search query"  # Query memory
-nexusclaw kb add --file mydoc.pdf
-nexusclaw status             # System status
+# → API: http://localhost:8080
+# → Web: http://localhost:19789
 ```
 
 ---
 
-## Architecture
+## 🖥️ CLI Reference
+
+```bash
+nexusclaw setup              # Configure (first time)
+nexusclaw chat               # Interactive chat
+nexusclaw chat --model gpt-4o --provider openai
+nexusclaw status             # System health
+nexusclaw doctor             # Diagnose issues
+nexusclaw soul --list        # List souls
+nexusclaw soul --edit        # Edit soul
+nexusclaw skills list        # List skills
+nexusclaw skills run <name>  # Run a skill
+nexusclaw memory "query"     # Query long-term memory
+nexusclaw kb add --file x.pdf # Add to knowledge base
+nexusclaw autonomy goals     # View goals
+nexusclaw autonomy kill      # Kill all goals
+nexusclaw update             # Update from GitHub
+```
+
+---
+
+## 🌐 Supported Providers
+
+| Provider | API Key Required | Local |
+|----------|-----------------|-------|
+| OpenRouter | ✅ | ❌ |
+| OpenAI | ✅ | ❌ |
+| Anthropic | ✅ | ❌ |
+| Perplexity | ✅ | ❌ |
+| Ollama | ❌ | ✅ |
+| LM Studio | ❌ | ✅ |
+| vLLM | ❌ | ✅ |
+
+---
+
+## 🏗️ Architecture
 
 ```
 nexusclaw/
 ├── apps/
-│   ├── api/                # FastAPI: auth, chat, files, autonomy
-│   ├── worker/             # File indexer: PDF, DOCX, HTML, TXT
-│   ├── model-gateway/      # Unified streaming for all providers
-│   ├── web/                # OpenRoom browser UI
-│   │   ├── index.html      # Full-featured chat interface
-│   │   └── server.py       # WebSocket proxy server
-│   ├── channels/
-│   │   ├── telegram/       # Telegram bot
-│   │   └── discord/        # Discord bot
-│   └── ...
+│   ├── api/          # FastAPI REST + WebSocket
+│   ├── web/          # Web UI (OpenRoom-style)
+│   ├── channels/     # Telegram + Discord
+│   └── model-gateway/  # Unified streaming gateway
 ├── src/
-│   ├── cli/                # nexusclaw command
-│   ├── onboard/            # Setup wizard
-│   ├── soul/               # Identity engine
-│   ├── providers/          # Ollama, OpenAI, Anthropic, Minimaxi
-│   ├── memory/             # Vector store + RAG
-│   ├── knowledge/          # Knowledge base manager
-│   ├── tools/              # Tool registry + web search
-│   ├── evoclaw/            # Self-evolution engine
-│   ├── autonomy/            # Goal execution + approval gates
-│   └── plugins/            # Plugin system
-├── API.md                   # Full API reference
-├── install.sh              # OpenClaw-style installer
-├── docker-compose.yml      # Full stack deployment
-└── pyproject.toml         # Python packaging
+│   ├── providers/   # Multi-provider LLM engine
+│   ├── memory/       # Vector + session memory
+│   ├── soul/        # Personality engine
+│   ├── tools/       # Tool registry + execution
+│   ├── evoclaw/     # Self-evolution engine
+│   ├── autonomy/    # Goal planning + execution
+│   ├── skills/      # Skill system
+│   ├── workflows/   # Workflow automation
+│   └── agents/      # Multi-agent system
+├── skills/          # Built-in skills
+└── docs/
+    └── blueprint/   # Full build blueprint
 ```
 
 ---
 
-## Version History
+## 📄 License
 
-| Version | Key Features |
-|---------|-------------|
-| v0.1 | Framework skeleton, onboarding wizard |
-| v0.5 | EvoClaw self-evolution engine |
-| v0.6 | OpenRoom web UI + API |
-| v0.7 | Telegram + Discord channels |
-| v0.8 | Qdrant vector memory |
-| v0.9 | Autonomy executor + kill switch |
-| v0.10 | RAG pipeline |
-| v0.11 | Perplexity-style web search |
-| v0.12 | OpenClaw-style installer |
-| v0.15 | Full setup wizard |
-| v0.16 | Knowledge base manager |
-| v0.17 | Plugin system |
-| v0.18 | Tool registry + permissions |
-| v0.19 | Soul editor |
-| v0.20 | API documentation |
-| v0.21 | Complete CLI |
+MIT — Use it, modify it, sell it, fork it. Your framework. Your rules.
 
 ---
 
-## Design Documents
+## 🤝 Contributing
 
-21 design iterations in `/home/greench/New Proj/`:
-- `1st` — Product definition (4 pillars)
-- `5th` — GitHub setup + .gitignore
-- `10th` — v0.6: Parsers + retry queue + provider-fallback streaming
-- `15th` — v0.8: Prisma models (AutonomousGoal, Task, Event, ApprovalRequest, Policy)
-- `20th` — Continuity checklist: Phase A-E
-- `21st` — One-shot QA pack
+1. Fork the repo
+2. Create a feature branch
+3. Submit a PR
 
----
-
-## License
-
-MIT — Fork it. Modify it. Make it yours.
-
----
-
-*Built with freedom by Greench + Naruto*
+Issues, feature requests, and contributions welcome.

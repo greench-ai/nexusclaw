@@ -1,34 +1,72 @@
 [project]
 name = "nexusclaw"
-version = "0.12.0"
-description = "Freedom-first unified AI agent framework"
+version = "1.0.0"
+description = "NexusClaw — Freedom-first AI agent framework. Your framework. Your rules."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.10"
+authors = [
+    {name = "Greench", email = "greench@example.com"},
+]
+keywords = ["ai", "agent", "framework", "llm", "claude", "evoclaw", "openwebui", "anythingllm"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Artificial Intelligence",
+]
+
 dependencies = [
-    "fastapi>=0.109.0",
-    "uvicorn[standard]>=0.27.0",
-    "pydantic>=2.0",
-    "python-jose[cryptography]",
-    "python-multipart",
-    "aiohttp>=3.9.0",
-    "httpx>=0.26.0",
-    "qdrant-client>=1.7.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-multipart>=0.0.20",
+    "aiohttp>=3.11.0",
+    "httpx>=0.28.0",
+    "qdrant-client>=1.12.0",
     "chromadb>=0.4.22",
-    "pymupdf>=1.23.0",
-    "mammoth>=1.6.0",
+    "lancedb>=0.15.0",
+    "sentence-transformers>=3.3.0",
+    "openai>=1.57.0",
+    "anthropic>=0.39.0",
+    "ollama>=0.4.0",
+    "playwright>=1.50.0",
+    "psutil>=7.0.0",
+    "watchdog>=6.0.0",
+    "rich>=13.9.0",
+    "click>=8.1.0",
+    "python-dotenv>=1.0.0",
+    "python-dateutil>=2.9.0",
+    "PyPDF2>=3.0.0",
+    "python-docx>=1.1.0",
     "beautifulsoup4>=4.12.0",
-    "lxml>=5.0.0",
-    "numpy>=1.26.0",
-    "PyJWT>=2.8.0",
+    "lxml>=5.3.0",
+    "markdown>=3.7",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "pytest-asyncio>=0.23.0", "black>=24.0", "ruff>=0.2.0"]
+dev    = ["pytest>=8.0", "pytest-asyncio>=0.23.0", "black>=24.0", "ruff>=0.2.0"]
+server = ["gunicorn>=21.0"]
 
 [project.scripts]
-nexusclaw = "src.cli.main:main"
+nexusclaw = "src.cli.cli:cli"
+
+[project.urls]
+Homepage    = "https://github.com/greench-ai/nexusclaw"
+Repository  = "https://github.com/greench-ai/nexusclaw"
+Documentation = "https://github.com/greench-ai/nexusclaw#readme"
 
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src/*", "apps/*"]
