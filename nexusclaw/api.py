@@ -106,6 +106,19 @@ async def add_provider(payload: ProviderPayload):
     return {"ok": True, "provider": payload.name}
 
 
+class DetectAPIModeBody(BaseModel):
+    base_url: str
+    api_key: str | None = None
+
+
+@router.post("/config/provider/detect")
+async def detect_api_mode(body: DetectAPIModeBody):
+    """Auto-detect API mode for a given base_url + optional api_key."""
+    from nexusclaw.providers import detect_api_mode as _detect
+    mode = await _detect(body.base_url, body.api_key)
+    return {"api_mode": mode, "base_url": body.base_url}
+
+
 @router.delete("/config/provider/{name}")
 async def delete_provider(name: str):
     """Remove a provider."""

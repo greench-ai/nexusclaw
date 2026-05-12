@@ -186,3 +186,52 @@ async def chat(
         elif chunk["type"] == "error":
             return {"error": chunk["error"]}
     return {"content": "".join(content), "model": model}
+
+
+# ── API Mode Auto-Detection ─────────────────────────────────────────────────
+
+async def detect_api_mode(base_url: str, api_key: str | None = None) -> str:
+    """
+    Probe the base_url to determine if it's OpenAI-compatible or Anthropic-compatible.
+    Returns: "openai-chat" | "anthropic-chat"
+    """
+    headers = {}
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+
+    test_openai = {
+        "model": "_detect_model",
+        "messages": [{"role": "user", "content": "hi"}],
+        "max_tokens": 2,
+    }
+    test_anthropic = {
+        "model": "_detect_model",
+        "messages": [{"role": "user", "content": "hi"}],
+        "max_tokens": 2,
+    }
+
+    # Try OpenAI first
+    openai_url = f"{base_url.rstrip('/')}/chat/completions"
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.post(openai_url, json=test_openai, headers={**headers, "Content-Type": "application/json"})
+            if resp.status_code in (200, 400, 401, 403):
+                return "openai-chat"
+    except (httpx.ConnectError, httpx.TimeoutException, httpx.RemoteProtocolError):
+        pass
+
+    # Try Anthropic
+    anthropic_url = f"{base_url.rstrip('/')}/v1/messages"
+    try:
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            resp = await client.post(
+                anthropic_url,
+                json=test_anthropic,
+                headers={**headers, "Content-Type": "application/json", "anthropic-version": "2023-06-01"},
+            )
+            if resp.status_code in (200, 400, 401, 403):
+                return "anthropic-chat"
+    except (httpx.ConnectError, httpx.TimeoutException, httpx.RemoteProtocolError):
+        pass
+
+    return "openai-chat"

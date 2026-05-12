@@ -41,9 +41,10 @@ export default function SettingsView() {
     name: "",
     base_url: "",
     api_key: "",
-    api_mode: "openai",
+    api_mode: "openai-chat",
     models: "",
   });
+  const [detecting, setDetecting] = useState(false);
 
   // Switch default provider
   const [switchDropdown, setSwitchDropdown] = useState(false);
@@ -89,7 +90,7 @@ export default function SettingsView() {
       if (res.ok) {
         setStatus({ type: "ok", msg: `Provider "${addForm.name}" added.` });
         setShowAddForm(false);
-        setAddForm({ name: "", base_url: "", api_key: "", api_mode: "openai", models: "" });
+        setAddForm({ name: "", base_url: "", api_key: "", api_mode: "openai-chat", models: "" });
         loadConfig();
       } else {
         const err = await res.text();
@@ -300,7 +301,7 @@ export default function SettingsView() {
               </div>
               <div style={s.providerDetail}>
                 <span style={s.label}>API Mode</span>
-                <span style={s.value}>{prov.api_mode || "openai"}</span>
+                <span style={s.value}>{prov.api_mode === "anthropic-chat" ? "Anthropic" : prov.api_mode === "openai-chat" ? "OpenAI-compatible" : (prov.api_mode || "openai")}</span>
               </div>
               <div style={s.providerDetail}>
                 <span style={s.label}>API Key</span>
@@ -350,15 +351,39 @@ export default function SettingsView() {
             </div>
             <div style={s.formRow}>
               <label style={s.formLabel}>API Mode</label>
-              <select
-                style={s.select}
-                value={addForm.api_mode}
-                onChange={(e) => setAddForm((f) => ({ ...f, api_mode: e.target.value }))}
-              >
-                <option value="openai">OpenAI-compatible</option>
-                <option value="anthropic">Anthropic</option>
-                <option value="gemini">Google Gemini</option>
-              </select>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <select
+                  style={{ ...s.select, flex: 1 }}
+                  value={addForm.api_mode}
+                  onChange={(e) => setAddForm((f) => ({ ...f, api_mode: e.target.value }))}
+                >
+                  <option value="openai-chat">OpenAI-compatible</option>
+                  <option value="anthropic-chat">Anthropic</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!addForm.base_url) return;
+                    setDetecting(true);
+                    try {
+                      const res = await fetch("/api/v1/config/provider/detect", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ base_url: addForm.base_url, api_key: addForm.api_key || undefined }),
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setAddForm((f) => ({ ...f, api_mode: data.api_mode }));
+                      }
+                    } catch { /* ignore */ }
+                    setDetecting(false);
+                  }}
+                  disabled={detecting || !addForm.base_url}
+                  style={{ padding: "7px 12px", background: SURFACE, color: detecting ? TEXT2 : ACCENT, border: `1px solid ${BORDER}`, borderRadius: 6, fontSize: 12, cursor: detecting ? "not-allowed" : "pointer", fontFamily: "'Space Grotesk', system-ui, sans-serif", whiteSpace: "nowrap" as const }}
+                >
+                  {detecting ? "Detecting…" : "Auto-detect"}
+                </button>
+              </div>
             </div>
             <div style={s.formRow}>
               <label style={s.formLabel}>Models (comma-separated)</label>
@@ -377,7 +402,7 @@ export default function SettingsView() {
                 style={s.btnSecondary}
                 onClick={() => {
                   setShowAddForm(false);
-                  setAddForm({ name: "", base_url: "", api_key: "", api_mode: "openai", models: "" });
+                  setAddForm({ name: "", base_url: "", api_key: "", api_mode: "openai-chat", models: "" });
                 }}
               >
                 <X size={14} /> Cancel
