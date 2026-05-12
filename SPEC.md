@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Date:** 2026-05-13  
-**Status:** v1 core done, RAG added, v2 features in progress
+**Status:** v1 complete — all core features done, v2 deferred
 
 ---
 
@@ -11,155 +11,135 @@
 Self-hosted AI gateway and agent platform. No LiteLLM. No vendor lock-in.
 
 ```
-Browser → NexusClaw API → Provider API (OpenAI-compatible)
+Browser → NexusClaw API → Provider API (OpenAI-compatible or Anthropic)
               ↓
          ~/.nexusclaw/config.yaml
 ```
 
 ---
 
-## v1 — What it is (CURRENT)
+## v1 — Current State
 
-### ✅ Core features deployed
+### ✅ Core features
 - Model switching (all providers, all models, instantly)
-- WebSocket streaming chat
-- Settings page (add/switch/delete providers, set default model, api_mode)
+- WebSocket streaming chat with conversation persistence (SQLite)
+- Auto-generate conversation titles from first message
+- Focus mode picker in chat (Copilot / Academic / Writing / Custom)
+- Settings page (add/switch/delete providers, api_mode)
+- Auto-detect API mode for custom providers (probes endpoint)
 - CLI onboard wizard (30+ providers, security warning, QuickStart mode)
 - Docker Compose deployment
-- Conversation history (SQLite — create/switch/delete, auto-save on message)
 
-### ✅ Views (9 total)
+### ✅ Views (10 total)
 | Route | View | Description |
 |---|---|---|
-| `/chat` | ChatView | Chat + model selector + conversation sidebar |
+| `/chat` | ChatView | Chat + model selector + focus mode + conversation sidebar |
 | `/brain` | BrainView | Digital Brain — Mem0 proxy at host.docker.internal:8765 |
 | `/rag` | RAGView | Document upload, semantic search, chat with context |
 | `/skills` | SkillsView | Marketplace (install from URL) + proposal workflow |
+| `/prompts` | PromptsView | Prompt templates CRUD with {{variable}} interpolation |
 | `/manager` | ManagerView | Agent sessions dashboard |
 | `/collections` | CollectionsView | Qdrant collection explorer |
 | `/group-chat` | GroupChatView | Multi-agent UI (agent picker, team type, task runner) |
 | `/browser` | BrowserView | Playwright browser control (sessions, navigate, screenshot) |
-| `/settings` | SettingsView | Provider management + api_mode display |
+| `/settings` | SettingsView | Provider management + auto-detect api_mode |
 
 ### ✅ API endpoints
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/v1/config` | All providers + default model + api_mode |
 | POST | `/api/v1/config/provider` | Add/update provider (merges with existing) |
+| POST | `/api/v1/config/provider/detect` | Auto-detect api_mode for a base_url |
 | DELETE | `/api/v1/config/provider/{name}` | Remove provider |
-| POST | `/api/v1/chat` | Non-streaming chat |
-| WS | `/api/v1/stream/{workspace_id}` | Streaming chat + auto-saves to SQLite |
 | GET | `/api/v1/conversations` | List all conversations |
 | POST | `/api/v1/conversations` | Create conversation |
-| GET | `/api/v1/conversations/{id}` | Get conversation |
-| GET | `/api/v1/conversations/{id}/messages` | Get messages |
-| POST | `/api/v1/conversations/{id}/messages` | Add message |
+| GET | `/api/v1/conversations/{id}` | Get conversation + messages |
 | DELETE | `/api/v1/conversations/{id}` | Delete conversation |
-| GET | `/api/v1/brain/stats` | Mem0 health + memory count |
-| POST | `/api/v1/brain/search` | Semantic search in memories |
-| GET | `/api/v1/brain/memories` | All memories |
-| POST | `/api/v1/brain/memories` | Add memory |
-| DELETE | `/api/v1/brain/memories/{id}` | Delete memory |
-| POST | `/api/v1/rag/upload` | Upload document → parse → chunk → embed → store |
-| GET | `/api/v1/rag/documents` | List indexed documents |
-| DELETE | `/api/v1/rag/documents/{doc_id}` | Delete document + chunks |
-| POST | `/api/v1/rag/search` | Semantic search across documents |
-| POST | `/api/v1/rag/chat` | Chat with RAG context |
-| GET | `/api/v1/skills/marketplace` | List installed skills |
-| POST | `/api/v1/skills/marketplace/install` | Install skill from URL |
-| DELETE | `/api/v1/skills/marketplace/{name}` | Uninstall skill |
-| GET | `/api/v1/skills/proposals` | List proposals |
-| POST | `/api/v1/skills/proposals` | Submit proposal |
-| POST | `/api/v1/skills/proposals/{id}/approve` | Approve → writes SKILL.md |
-| POST | `/api/v1/skills/proposals/{id}/reject` | Reject proposal |
+| WS | `/api/v1/stream/{workspace_id}` | Streaming chat with conversation persistence |
+| POST | `/api/v1/rag/upload` | Upload + parse + embed + store document |
+| POST | `/api/v1/rag/search` | Semantic search across chunks |
+| POST | `/api/v1/rag/verify` | Citation fact-check (claim vs chunks) |
+| GET | `/api/v1/prompts` | List prompt templates |
+| POST | `/api/v1/prompts` | Create prompt template |
+| GET | `/api/v1/prompts/{name}` | Get template |
+| PATCH | `/api/v1/prompts/{name}` | Update template |
+| DELETE | `/api/v1/prompts/{name}` | Delete template |
+| GET | `/api/v1/brain/stats` | Mem0 stats (memory count, model, embedder) |
+| POST | `/api/v1/brain/search` | Semantic memory search |
+| GET/POST/DELETE | `/api/v1/brain/memories` | Memory CRUD |
 
-### Supported providers
-Ollama, OpenRouter, DeepSeek, Groq, DashScope, OpenAI, Anthropic, MiniMax, Custom Provider (any OpenAI-compatible API).
+### ✅ RAG pipeline
+- Upload: PDF, DOCX, TXT, MD, HTML
+- Chunking: 500 tokens, 100 token overlap
+- Embedding: Ollama `nomic-embed-text:v1.5` via WSL2 (accessible from Docker at 172.29.192.1:11434)
+- Storage: Qdrant at `qdrant-nexusclaw:6333` on `nexusclaw_default` network
+- Search: semantic vector search with score
+- Context injection: RAG context appended as system prompt in WebSocket chat
+- Citation fact-check: LLM verifies claims against source chunks
 
-### Docker networking
-- `OLLAMA_URL=http://172.29.192.1:11434` (WSL2 Ollama for RAG embeddings)
-- `host.docker.internal:host-gateway` (Windows host from Docker)
-- Qdrant at `qdrant-nexusclaw:6333` (nexusclaw_default Docker network)
-- Mem0 at `host.docker.internal:8765` (Digital Brain on Windows)
+### ✅ Focus modes
+- **Copilot**: k=5, balanced retrieval
+- **Academic**: +30% score boost for academic/arxiv docs (planned)
+- **Writing**: +15% score boost for prose/writing docs (planned)
+- **Custom**: use custom prompt templates
 
-### Known issues
-- No Rerank endpoint yet (colbert/rerankers not integrated)
-- GroupChat/Manager/Browser — UI present but backend endpoints for actual execution not connected
-- Skills marketplace — skill execution not wired to agent runtime
-- Collections view — Qdrant must be running (`docker run -d --name qdrant-nexusclaw -p 6333:6333 qdrant/qdrant:latest` then `docker network connect nexusclaw_default qdrant-nexusclaw`)
-
----
-
-## v2 — What we're building
-
-### Planned features
-- **RAG增强**: Reranking (colbert), citation fact-check endpoint, focus modes (copilot/academic/writing)
-- **Discord bot**: WebSocket bridge to NexusClaw `/chat/stream`
-- **Telegram bot**: Long polling bridge to NexusClaw
-- **MCP tool execution**: Connect MCP servers, call tools from agents
-- **Agent runtime**: Tool execution, browser automation, file system tools
-- **Prompt templates**: SQLite CRUD + interpolation in chat
-- **Conversation title**: Auto-generate from first message
+### ✅ Prompt templates
+- SQLite storage at `~/.nexusclaw/prompt_templates.db`
+- `{{variable}}` placeholder extraction
+- `interpolate(**kwargs)` returns (system_prompt, user_prompt)
+- Focus mode per template (copilot/academic/writing/custom)
 
 ---
 
-## Design system
+## v2 — Planned
 
-| Token | Value |
-|---|---|
-| Background | `#0a0a0a` |
-| Surface | `#111118` |
-| Border | `#1e1e28` |
-| Text | `#f0f0f0` |
-| Text secondary | `#6b6b7b` |
-| Accent | `#00ff88` |
-| Orange | `#ff6b35` |
+### High priority
+- Citation fact-check UI in ChatView (wire POST /rag/verify to selected text)
+- RAG reranking (ColBERT cross-encoder, increase k=20 → rerank to k=5)
+- Discord/Telegram WebSocket bridge (connect bot channels to /chat/stream)
+- MCP tool execution pipeline (wire MCP bridge to agent runtime)
+- Skills execution (wire marketplace skills to agent runtime)
 
-**Fonts:** Space Grotesk (body) + IBM Plex Mono (code/mono)  
-**Effects:** Glow shadows, grain noise overlay, custom scrollbar, `translateY` hover lifts
+### Medium priority
+- Prompt template interpolation in chat (use template variables)
+- Langfuse tracing (requires ClickHouse — deferred)
+- Prometheus/Grafana metrics (deferred)
+- Artifact system UI (ManagerView)
+
+### Low priority
+- GroupChat execution endpoints (UI present, backend not connected)
+- BrowserView execution (UI present, backend not connected)
+- ManagerView execution (UI present, backend not connected)
 
 ---
 
-## Deployment
+## Architecture
 
-```bash
-# One-line install
-curl -sL https://github.com/greench-ai/nexusclaw/raw/main/install.sh | bash
-
-# Manual
-git clone https://github.com/greench-ai/nexusclaw.git
-cd nexusclaw && docker-compose up -d
-open http://localhost:14300/setup
-
-# Start Qdrant (needed for RAG + Collections)
-docker run -d --name qdrant-nexusclaw -p 6333:6333 -p 6334:6334 qdrant/qdrant:latest
-docker network connect nexusclaw_default qdrant-nexusclaw
+```
+nexusclaw/
+├── api.py              # HTTP + WebSocket chat handler
+├── providers.py        # Direct httpx calls (no LiteLLM)
+├── config.py           # YAML config read/write
+├── conversations.py    # SQLite conversation store
+├── rag.py             # RAG pipeline (parse/chunk/embed/store/search)
+├── prompts.py         # Prompt template SQLite store
+├── main.py            # FastAPI app + CORS + routes
+├── api_*.py           # API route modules
+└── cli.py             # CLI commands (onboard, discord, telegram)
 ```
 
+**Config:** `~/.nexusclaw/config.yaml`
+**DB:** `~/.nexusclaw/conversations.db`, `~/.nexusclaw/prompt_templates.db`
+**Ports:** API 8000, Web 3000 (Docker Compose)
+
 ---
 
-## Config (`~/.nexusclaw/config.yaml`)
+## Providers (configured)
+- `MiniMax-M2.7-highspeed` — MiniMax via OpenWebUI (api_mode: anthropic-chat)
+- `openrouter` — OpenRouter (api_mode: openai-chat)
+- Custom providers supported via auto-detect or manual api_mode
 
-```yaml
-version: "1.0.0"
-default_provider: openrouter
-default_model: openrouter/deepseek-chat-v3.1
-providers:
-  openrouter:
-    name: openrouter
-    api_key: sk-or-v1-...
-    base_url: https://openrouter.ai/api/v1
-    api_mode: openai-chat
-    models:
-      - deepseek/deepseek-chat-v3.1
-      - qwen/qwen3-8b
-    enabled: true
-  custom_api_minimax_io:
-    name: custom_api_minimax_io
-    base_url: https://api.minimax.io/anthropic
-    api_mode: anthropic-chat
-    api_key: sk-cp-...
-    models:
-      - MiniMax-M2.7-highspeed
-    enabled: true
-```
+## Key files
+- `docker-compose.yml` — Full stack: nexusclaw + qdrant
+- `Dockerfile.app` — NexusClaw API + Web UI
+- `install.sh` — `curl | bash` installer
