@@ -46,6 +46,8 @@ export default function ChatView() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState("copilot");
+  const [focusDropdownOpen, setFocusDropdownOpen] = useState(false);
 
   // Conversation state
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -150,7 +152,7 @@ export default function ChatView() {
     setMessages((msgs) => [...msgs, { role: "assistant", content: "" }]);
 
     ws.onopen = () => {
-      ws.send(JSON.stringify({ message, model: currentModel, conversation_id: activeConvId }));
+      ws.send(JSON.stringify({ message, model: currentModel, conversation_id: activeConvId, focus_mode: focusMode }));
     };
 
     ws.onmessage = (event) => {
@@ -365,6 +367,37 @@ export default function ChatView() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+
+            {/* Focus mode picker */}
+            <div style={{ position: "relative" }}>
+              <button
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 10px", background: focusMode !== "copilot" ? "rgba(0,255,136,0.08)" : SURFACE, border: `1px solid ${focusMode !== "copilot" ? ACCENT : BORDER}`, borderRadius: 6, color: focusMode !== "copilot" ? ACCENT : TEXT, fontSize: 12, fontFamily: "'Space Grotesk', system-ui, sans-serif", cursor: "pointer" }}
+                onClick={() => setFocusDropdownOpen((v) => !v)}
+              >
+                <span style={{ fontSize: 11 }}>⚡</span>
+                <span style={{ fontSize: 12 }}>{focusMode === "copilot" ? "Copilot" : focusMode === "academic" ? "Academic" : focusMode === "writing" ? "Writing" : "Custom"}</span>
+                <ChevronDown size={10} style={{ color: TEXT2, transform: focusDropdownOpen ? "rotate(180deg)" : "none", transition: "transform 150ms" }} />
+              </button>
+              {focusDropdownOpen && (
+                <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: SURFACE, border: `1px solid ${BORDER}`, borderRadius: 8, minWidth: 160, zIndex: 200, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", padding: "4px 0" }}>
+                  {[
+                    { key: "copilot", label: "Copilot", desc: "Balanced, k=3" },
+                    { key: "academic", label: "Academic", desc: "+30% arxiv boost" },
+                    { key: "writing", label: "Writing", desc: "+15% prose boost" },
+                    { key: "custom", label: "Custom", desc: "Your prompts" },
+                  ].map(({ key, label, desc }) => (
+                    <button
+                      key={key}
+                      style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", width: "100%", padding: "7px 12px", background: focusMode === key ? "rgba(0,255,136,0.08)" : "transparent", border: "none", color: focusMode === key ? ACCENT : TEXT, fontSize: 12, cursor: "pointer", textAlign: "left" as const, gap: 1 }}
+                      onClick={() => { setFocusMode(key); setFocusDropdownOpen(false); }}
+                    >
+                      <span style={{ fontWeight: 600 }}>{label}</span>
+                      <span style={{ fontSize: 10, color: TEXT2 }}>{desc}</span>
+                    </button>
+                  ))}
                 </div>
               )}
             </div>

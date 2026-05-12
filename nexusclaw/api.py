@@ -206,7 +206,8 @@ async def chat_stream(ws: WebSocket, workspace_id: str):
     if use_rag:
         try:
             from nexusclaw.rag import search_chunks
-            chunks = await search_chunks(message, top_k=5)
+            focus_mode = data.get("focus_mode", "copilot")
+            chunks = await search_chunks(message, top_k=5, focus_mode=focus_mode)
             if chunks:
                 context_parts = []
                 for c in chunks:

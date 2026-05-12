@@ -201,8 +201,14 @@ def store_document(
     }
 
 
-async def search_chunks(query: str, top_k: int = 5) -> list[dict]:
-    """Search for relevant chunks given a query."""
+async def search_chunks(query: str, top_k: int = 5, focus_mode: str = "copilot") -> list[dict]:
+    """Search for relevant chunks given a query.
+    
+    focus_mode affects retrieval:
+    - copilot: standard retrieval (k=5)
+    - academic: +30% boost to documents with "academic" or "arxiv" in title
+    - writing: +15% boost to documents with "writing" or "prose" in title
+    """
     chunks = await embed_texts([query])
     query_vector = chunks[0]
 
