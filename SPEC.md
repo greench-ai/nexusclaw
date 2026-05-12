@@ -1,125 +1,105 @@
 # NexusClaw — Specification
 
 **Version:** 1.0  
-**Date:** 2026-05-12  
-**Status:** v1 deployed, v2 planning
+**Date:** 2026-05-13  
+**Status:** v1 core done, RAG added, v2 features in progress
 
 ---
 
 ## What is NexusClaw?
 
-Self-hosted AI gateway and agent platform. No LiteLLM. No vendor lock-in. You run it, you own it.
-
-**Stack:** Python + FastAPI + React. Direct calls to provider APIs (OpenAI-compatible).
+Self-hosted AI gateway and agent platform. No LiteLLM. No vendor lock-in.
 
 ```
-User browser → NexusClaw API → Provider API
-                  ↑
-          ~/.nexusclaw/config.yaml
+Browser → NexusClaw API → Provider API (OpenAI-compatible)
+              ↓
+         ~/.nexusclaw/config.yaml
 ```
 
 ---
 
-## v1 — What it is (CURRENTLY DEPLOYED)
+## v1 — What it is (CURRENT)
 
-### Core features ✓
+### ✅ Core features deployed
 - Model switching (all providers, all models, instantly)
 - WebSocket streaming chat
-- Settings page (add/switch/delete providers, set default model)
+- Settings page (add/switch/delete providers, set default model, api_mode)
 - CLI onboard wizard (30+ providers, security warning, QuickStart mode)
 - Docker Compose deployment
+- Conversation history (SQLite — create/switch/delete, auto-save on message)
 
-### API endpoints
+### ✅ Views (9 total)
+| Route | View | Description |
+|---|---|---|
+| `/chat` | ChatView | Chat + model selector + conversation sidebar |
+| `/brain` | BrainView | Digital Brain — Mem0 proxy at host.docker.internal:8765 |
+| `/rag` | RAGView | Document upload, semantic search, chat with context |
+| `/skills` | SkillsView | Marketplace (install from URL) + proposal workflow |
+| `/manager` | ManagerView | Agent sessions dashboard |
+| `/collections` | CollectionsView | Qdrant collection explorer |
+| `/group-chat` | GroupChatView | Multi-agent UI (agent picker, team type, task runner) |
+| `/browser` | BrowserView | Playwright browser control (sessions, navigate, screenshot) |
+| `/settings` | SettingsView | Provider management + api_mode display |
+
+### ✅ API endpoints
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/v1/config` | All providers + default model |
-| POST | `/api/v1/config/provider` | Add/update a provider |
-| DELETE | `/api/v1/config/provider/{name}` | Remove a provider |
+| GET | `/api/v1/config` | All providers + default model + api_mode |
+| POST | `/api/v1/config/provider` | Add/update provider (merges with existing) |
+| DELETE | `/api/v1/config/provider/{name}` | Remove provider |
 | POST | `/api/v1/chat` | Non-streaming chat |
-| WS | `/api/v1/stream/{workspace_id}` | Streaming chat |
+| WS | `/api/v1/stream/{workspace_id}` | Streaming chat + auto-saves to SQLite |
+| GET | `/api/v1/conversations` | List all conversations |
+| POST | `/api/v1/conversations` | Create conversation |
+| GET | `/api/v1/conversations/{id}` | Get conversation |
+| GET | `/api/v1/conversations/{id}/messages` | Get messages |
+| POST | `/api/v1/conversations/{id}/messages` | Add message |
+| DELETE | `/api/v1/conversations/{id}` | Delete conversation |
+| GET | `/api/v1/brain/stats` | Mem0 health + memory count |
+| POST | `/api/v1/brain/search` | Semantic search in memories |
+| GET | `/api/v1/brain/memories` | All memories |
+| POST | `/api/v1/brain/memories` | Add memory |
+| DELETE | `/api/v1/brain/memories/{id}` | Delete memory |
+| POST | `/api/v1/rag/upload` | Upload document → parse → chunk → embed → store |
+| GET | `/api/v1/rag/documents` | List indexed documents |
+| DELETE | `/api/v1/rag/documents/{doc_id}` | Delete document + chunks |
+| POST | `/api/v1/rag/search` | Semantic search across documents |
+| POST | `/api/v1/rag/chat` | Chat with RAG context |
+| GET | `/api/v1/skills/marketplace` | List installed skills |
+| POST | `/api/v1/skills/marketplace/install` | Install skill from URL |
+| DELETE | `/api/v1/skills/marketplace/{name}` | Uninstall skill |
+| GET | `/api/v1/skills/proposals` | List proposals |
+| POST | `/api/v1/skills/proposals` | Submit proposal |
+| POST | `/api/v1/skills/proposals/{id}/approve` | Approve → writes SKILL.md |
+| POST | `/api/v1/skills/proposals/{id}/reject` | Reject proposal |
 
 ### Supported providers
-Ollama, OpenRouter, DeepSeek, Groq, DashScope, OpenAI, Anthropic, MiniMax, Custom Provider (any OpenAI-compatible API), and 20+ more via onboard wizard.
+Ollama, OpenRouter, DeepSeek, Groq, DashScope, OpenAI, Anthropic, MiniMax, Custom Provider (any OpenAI-compatible API).
 
-### What's working right now
-- Chat with MiniMax (`custom_api_minimax_io/MiniMax-M2.7-highspeed`)
-- Chat with OpenRouter DeepSeek (`openrouter/deepseek-chat-v3.1`)
-- Model selector dropdown in chat bar (shows ALL models from ALL providers)
-- Settings page (add/switch/delete providers, set default model)
-- `nexusclaw onboard` CLI wizard
+### Docker networking
+- `OLLAMA_URL=http://172.29.192.1:11434` (WSL2 Ollama for RAG embeddings)
+- `host.docker.internal:host-gateway` (Windows host from Docker)
+- Qdrant at `qdrant-nexusclaw:6333` (nexusclaw_default Docker network)
+- Mem0 at `host.docker.internal:8765` (Digital Brain on Windows)
 
 ### Known issues
-- Settings page shows API mode from provider config (may need to display api_mode correctly)
-- No conversation history persistence (messages lost on refresh)
-- No RAG/document upload
-- No Discord/Telegram bots
-- No skills system
-- No multi-agent
+- No Rerank endpoint yet (colbert/rerankers not integrated)
+- GroupChat/Manager/Browser — UI present but backend endpoints for actual execution not connected
+- Skills marketplace — skill execution not wired to agent runtime
+- Collections view — Qdrant must be running (`docker run -d --name qdrant-nexusclaw -p 6333:6333 qdrant/qdrant:latest` then `docker network connect nexusclaw_default qdrant-nexusclaw`)
 
 ---
 
-## v2 — What we're building (IN PROGRESS)
+## v2 — What we're building
 
-### Architecture
-```
-Browser → NexusClaw API (FastAPI)
-              ↓
-         Agent Runtime
-              ↓
-         LLM Providers (direct, no LiteLLM)
-              ↓
-         Memory (warm: SQLite FTS5, cold: Qdrant)
-              ↓
-         Tools (MCP, browser, file system)
-```
-
-### Planned features for v2
-
-#### Provider system
-- 30+ built-in providers (Ollama, OpenRouter, DeepSeek, Groq, DashScope, Anthropic, OpenAI, MiniMax, Cloudflare AI, HuggingFace, Together AI, vLLM, etc.)
-- Custom Provider: any OpenAI-compatible API, auto-detect mode
-- Per-provider model lists with defaults
-
-#### Chat UI
-- Model selector dropdown (all models, all providers, instant switch)
-- Conversation history (persisted in SQLite)
-- Streaming tokens in real-time
-- Copy code blocks, export conversation
-
-#### Agent runtime
-- Tool execution (MCP servers, built-in browser/file/terminal tools)
-- Session management with context windows
-- Multi-step task handling
-
-#### Memory
-- Warm memory: SQLite FTS5 (full-text search, fast)
-- Cold memory: Qdrant (vector similarity)
-- Semantic retrieval across conversation history
-
-#### RAG pipeline
-- Document upload (PDF, TXT, MD, DOCX, HTML)
-- Chunking + embedding + vector storage
-- Citation with fact-check verify endpoint
-- Focus modes: copilot, academic, writing
-
-#### Multi-agent
-- AutoGen-powered group chat
-- Persona agents: Researcher, Coder, Writer, Critic, Analyst
-- Round-robin and selector team modes
-
-#### Channel integrations
-- Discord bot (WebSocket bridge)
-- Telegram bot (long polling)
-- CLI chat
-
-#### Skill marketplace
-- Install skills from URL (fetches SKILL.md)
-- Skill formation: propose → approve → activate
-- Built-in skills + remote install
-
-#### Observability
-- Prometheus metrics endpoint
-- Request/response logging
+### Planned features
+- **RAG增强**: Reranking (colbert), citation fact-check endpoint, focus modes (copilot/academic/writing)
+- **Discord bot**: WebSocket bridge to NexusClaw `/chat/stream`
+- **Telegram bot**: Long polling bridge to NexusClaw
+- **MCP tool execution**: Connect MCP servers, call tools from agents
+- **Agent runtime**: Tool execution, browser automation, file system tools
+- **Prompt templates**: SQLite CRUD + interpolation in chat
+- **Conversation title**: Auto-generate from first message
 
 ---
 
@@ -133,41 +113,10 @@ Browser → NexusClaw API (FastAPI)
 | Text | `#f0f0f0` |
 | Text secondary | `#6b6b7b` |
 | Accent | `#00ff88` |
-| Accent dim | `rgba(0,255,136,0.1)` |
 | Orange | `#ff6b35` |
 
 **Fonts:** Space Grotesk (body) + IBM Plex Mono (code/mono)  
 **Effects:** Glow shadows, grain noise overlay, custom scrollbar, `translateY` hover lifts
-
----
-
-## File structure
-
-```
-nexusclaw/
-├── nexusclaw/
-│   ├── __init__.py
-│   ├── main.py          # FastAPI app, route registration
-│   ├── api.py           # API endpoints (config, chat)
-│   ├── config.py        # Config models + YAML load/save
-│   ├── providers.py      # Direct provider API calls (no LiteLLM)
-│   └── cli.py           # CLI: onboard, setup, status, start
-├── web/
-│   ├── src/
-│   │   ├── App.tsx             # Router + navbar
-│   │   ├── views/
-│   │   │   ├── ChatView.tsx    # Chat + model selector
-│   │   │   ├── SettingsView.tsx # Provider management
-│   │   │   └── SetupView.tsx   # First-run wizard
-│   │   └── styles.css
-│   ├── index.html
-│   └── package.json
-├── Dockerfile.app
-├── docker-compose.yml
-├── install.sh
-├── pyproject.toml
-└── SPEC.md
-```
 
 ---
 
@@ -177,15 +126,19 @@ nexusclaw/
 # One-line install
 curl -sL https://github.com/greench-ai/nexusclaw/raw/main/install.sh | bash
 
-# Or manual
+# Manual
 git clone https://github.com/greench-ai/nexusclaw.git
 cd nexusclaw && docker-compose up -d
 open http://localhost:14300/setup
+
+# Start Qdrant (needed for RAG + Collections)
+docker run -d --name qdrant-nexusclaw -p 6333:6333 -p 6334:6334 qdrant/qdrant:latest
+docker network connect nexusclaw_default qdrant-nexusclaw
 ```
 
 ---
 
-## API Configuration (`~/.nexusclaw/config.yaml`)
+## Config (`~/.nexusclaw/config.yaml`)
 
 ```yaml
 version: "1.0.0"
@@ -200,7 +153,6 @@ providers:
     models:
       - deepseek/deepseek-chat-v3.1
       - qwen/qwen3-8b
-      - nvidia/nemotron-3-super-120b-a12b:free
     enabled: true
   custom_api_minimax_io:
     name: custom_api_minimax_io
@@ -211,13 +163,3 @@ providers:
       - MiniMax-M2.7-highspeed
     enabled: true
 ```
-
----
-
-## Success criteria (v1)
-
-1. Fresh install → `/setup` wizard → chat works
-2. User adds API key → model responds (no config file editing)
-3. Model switching works instantly across all providers
-4. Docker Compose: `up -d` → healthy container
-5. No LiteLLM dependency
