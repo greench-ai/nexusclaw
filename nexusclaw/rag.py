@@ -9,6 +9,8 @@ import io
 import os
 import re
 import uuid
+
+from nexusclaw.providers import stream_chat
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -287,3 +289,71 @@ def delete_document(doc_id: str) -> bool:
         _save_docs_meta(meta)
         return True
     return False
+
+
+# ── Citation Fact-Check ───────────────────────────────────────────────────────
+
+async def verify_claim(claim: str, chunks: list[dict]) -> dict:
+    """
+    Verify a textual claim against retrieved source chunks.
+    Returns: { verdict: "verified" | "unsupported" | "contradicted", confidence: float, summary: str }
+    """
+    if not chunks:
+        return {"verdict": "unsupported", "confidence": 0.0, "summary": "No source chunks provided."}
+
+    def _source_text(i, c):
+        if hasattr(c, 'model_dump'):
+            d = c.model_dump()
+        elif hasattr(c, 'dict'):
+            d = c.dict()
+        else:
+            d = c
+        return f"[Source {i+1}: {d.get('doc_title', 'unknown')}]\n{d.get('text', '')}"
+
+    sources_text = "\n\n".join(
+        _source_text(i, c) for i, c in enumerate(chunks)
+    )
+
+    prompt = f"""You are a fact-checker. Given a claim and a set of source documents, determine if the claim is:
+- VERIFIED: the source documents fully support the claim
+- UNSUPPORTED: the source documents do not contain enough information to verify the claim
+- CONTRADICTED: the source documents directly contradict the claim
+
+Respond with ONLY this JSON format (no markdown, no explanation outside JSON):
+{{"verdict": "verified|unsupported|contradicted", "confidence": 0.0-1.0, "summary": "2-3 sentence explanation"}}
+
+---
+CLAIM: {claim}
+---
+SOURCES:
+{sources_text}
+---
+VERDICT:"""
+
+    from nexusclaw.main import app_state
+    messages = [{"role": "user", "content": prompt}]
+
+    try:
+        full_response = []
+        async for chunk in stream_chat(app_state.config, app_state.config.default_model, messages):
+            if chunk["type"] == "token":
+                full_response.append(chunk["content"])
+        response_text = "".join(full_response)
+
+        # Parse JSON from response
+        import json, re
+        json_match = re.search(r'\{[^{}]*"verdict"[^{}]*"confidence"[^{}]*"summary"[^{}]*\}', response_text, re.DOTALL)
+        if json_match:
+            result = json.loads(json_match.group())
+            verdict = result.get("verdict", "unsupported").lower()
+            if verdict not in ("verified", "unsupported", "contradicted"):
+                verdict = "unsupported"
+            return {
+                "verdict": verdict,
+                "confidence": float(result.get("confidence", 0.5)),
+                "summary": result.get("summary", ""),
+            }
+    except Exception as e:
+        log.warning("citation.verify_failed", error=str(e))
+
+    return {"verdict": "unsupported", "confidence": 0.0, "summary": "Fact-check failed due to an error."}

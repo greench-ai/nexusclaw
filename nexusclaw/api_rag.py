@@ -21,6 +21,7 @@ from nexusclaw.rag import (
     list_documents,
     delete_document,
     search_chunks,
+    verify_claim as rag_verify_claim,
 )
 
 log = structlog.get_logger(__name__)
@@ -39,6 +40,19 @@ class ChatWithRAGBody(BaseModel):
 class SearchBody(BaseModel):
     query: str
     top_k: int = 5
+
+
+class ChunkRef(BaseModel):
+    text: str
+    doc_id: str
+    doc_title: str
+    chunk_index: int
+    score: float
+
+
+class VerifyClaimBody(BaseModel):
+    claim: str
+    chunks: list[ChunkRef] = []
 
 
 # ── Upload ────────────────────────────────────────────────────────────────────
@@ -182,3 +196,10 @@ async def chat_with_rag(body: ChatWithRAGBody):
     except Exception as e:
         log.error("rag.chat_failed", error=str(e))
         yield {"type": "error", "error": str(e)}
+
+
+@router.post("/verify")
+async def verify_claim(body: VerifyClaimBody):
+    """Fact-check a claim against retrieved document chunks."""
+    result = await rag_verify_claim(body.claim, body.chunks)
+    return result
