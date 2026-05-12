@@ -12,7 +12,9 @@ RUN pip install --no-cache-dir \
     aiosqlite python-dotenv \
     pydantic pyyaml structlog fastapi==0.115.0 \
     pypdf python-docx beautifulsoup4 lxml \
-    qdrant-client
+    qdrant-client \
+    "autogen-agentchat>=0.7.0" "autogen-ext>=0.7.0" \
+    "openai>=1.0" tiktoken
 
 COPY nexusclaw/ ./nexusclaw/
 COPY web/dist/ ./web/dist/

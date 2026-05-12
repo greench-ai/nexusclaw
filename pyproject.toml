@@ -25,6 +25,8 @@ dependencies = [
     "beautifulsoup4",
     "lxml",
     "qdrant-client",
+    "autogen-agentchat>=0.7.0",
+    "autogen-ext>=0.7.0",
 ]
 
 [project.scripts]
