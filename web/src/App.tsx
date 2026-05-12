@@ -3,7 +3,20 @@ import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from "react
 import ChatView from "./views/ChatView";
 import SettingsView from "./views/SettingsView";
 import SetupView from "./views/SetupView";
+import BrainView from "./views/BrainView";
+import SkillsView from "./views/SkillsView";
+import ManagerView from "./views/ManagerView";
+import CollectionsView from "./views/CollectionsView";
+import GroupChatView from "./views/GroupChatView";
+import BrowserView from "./views/BrowserView";
 import "./styles.css";
+
+const BORDER = "#1e1e28";
+const TEXT = "#f0f0f0";
+const TEXT2 = "#6b6b7b";
+const ACCENT = "#00ff88";
+const BG = "#0a0a0a";
+const SURFACE = "#111118";
 
 function NavBar() {
   const location = useLocation();
@@ -16,59 +29,66 @@ function NavBar() {
       .catch(() => {});
   }, []);
 
-  const navStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    padding: "0.75rem 1.5rem",
-    background: "#0a0a0a",
-    borderBottom: "1px solid #1e1e28",
-    gap: "0.25rem",
-    position: "sticky",
-    top: 0,
-    zIndex: 100,
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   const linkStyle = (active: boolean): React.CSSProperties => ({
-    padding: "0.5rem 1rem",
+    padding: "0.4rem 0.75rem",
     borderRadius: "6px",
     textDecoration: "none",
-    fontSize: "0.875rem",
+    fontSize: "0.78rem",
     fontWeight: 500,
-    color: active ? "#00ff88" : "#6b6b7b",
+    color: active ? ACCENT : TEXT2,
     background: active ? "rgba(0,255,136,0.08)" : "transparent",
-    border: active ? "1px solid rgba(0,255,136,0.2)" : "1px solid transparent",
-    transition: "all 0.15s ease",
+    border: active ? "1px solid rgba(0,255,136,0.15)" : "1px solid transparent",
+    transition: "all 150ms",
+    whiteSpace: "nowrap" as const,
   });
 
-  const logoStyle: React.CSSProperties = {
-    fontFamily: "'IBM Plex Mono', monospace",
-    fontWeight: 700,
-    fontSize: "0.95rem",
-    color: "#00ff88",
-    marginRight: "1.5rem",
-    textDecoration: "none",
-    letterSpacing: "-0.02em",
-  };
-
-  const modelBadge: React.CSSProperties = {
-    marginLeft: "auto",
-    fontSize: "0.75rem",
-    color: "#6b6b7b",
-    fontFamily: "'IBM Plex Mono', monospace",
-    padding: "0.25rem 0.6rem",
-    background: "#111118",
-    borderRadius: "4px",
-    border: "1px solid #1e1e28",
-  };
-
   return (
-    <nav style={navStyle}>
-      <Link to="/" style={logoStyle}>⚡ NexusClaw</Link>
-      <Link to="/chat" style={linkStyle(location.pathname === "/chat")}>Chat</Link>
-      <Link to="/settings" style={linkStyle(location.pathname === "/settings")}>Settings</Link>
-      {config?.default_model && (
-        <span style={modelBadge}>{config.default_model.split("/").pop()}</span>
-      )}
+    <nav style={{
+      display: "flex",
+      alignItems: "center",
+      padding: "0.55rem 1.25rem",
+      background: BG,
+      borderBottom: `1px solid ${BORDER}`,
+      gap: "0.2rem",
+      position: "sticky",
+      top: 0,
+      zIndex: 100,
+      overflowX: "auto",
+    }}>
+      <Link to="/" style={{
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontWeight: 700,
+        fontSize: "0.78rem",
+        color: ACCENT,
+        textDecoration: "none",
+        marginRight: "1rem",
+        letterSpacing: "-0.02em",
+        flexShrink: 0,
+      }}>
+        ⚡ NexusClaw
+      </Link>
+
+      {[
+        { path: "/chat", label: "Chat" },
+        { path: "/brain", label: "Brain" },
+        { path: "/skills", label: "Skills" },
+        { path: "/manager", label: "Agents" },
+        { path: "/collections", label: "Collections" },
+        { path: "/group-chat", label: "Group Chat" },
+        { path: "/browser", label: "Browser" },
+      ].map(({ path, label }) => (
+        <Link key={path} to={path} style={linkStyle(isActive(path))}>
+          {label}
+        </Link>
+      ))}
+
+      <div style={{ marginLeft: "auto", flexShrink: 0 }}>
+        <Link to="/settings" style={linkStyle(isActive("/settings"))}>
+          Settings
+        </Link>
+      </div>
     </nav>
   );
 }
@@ -86,27 +106,44 @@ function App() {
   if (hasConfig === null) {
     return (
       <div style={{
-        display: "flex", alignItems: "center", justifyContent: "center",
-        height: "100vh", background: "#0a0a0a", color: "#6b6b7b",
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.875rem"
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        background: BG,
+        color: TEXT2,
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontSize: "0.875rem",
       }}>
-        Loading...
+        Loading…
       </div>
     );
   }
 
   return (
     <BrowserRouter>
-      <div style={{ minHeight: "100vh", background: "#0a0a0a" }}>
+      <div style={{ minHeight: "100vh", background: BG }}>
         <NavBar />
         <Routes>
+          <Route path="/setup" element={<SetupView />} />
+
+          {/* Full-height views (own layout) */}
+          <Route path="/chat" element={<ChatView />} />
+
+          {/* Standard views (nav bar + content) */}
+          <Route path="/brain" element={<BrainView />} />
+          <Route path="/skills" element={<SkillsView />} />
+          <Route path="/manager" element={<ManagerView />} />
+          <Route path="/collections" element={<CollectionsView />} />
+          <Route path="/group-chat" element={<GroupChatView />} />
+          <Route path="/browser" element={<BrowserView />} />
+          <Route path="/settings" element={<SettingsView />} />
+
+          {/* Root */}
           <Route
             path="/"
             element={hasConfig ? <Navigate to="/chat" replace /> : <Navigate to="/setup" replace />}
           />
-          <Route path="/setup" element={<SetupView />} />
-          <Route path="/chat" element={<ChatView />} />
-          <Route path="/settings" element={<SettingsView />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

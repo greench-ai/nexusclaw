@@ -23,6 +23,7 @@ from nexusclaw.config import (
     save_config,
 )
 from nexusclaw.providers import chat, stream_chat
+from nexusclaw import conversations
 
 log = structlog.get_logger(__name__)
 router = APIRouter(prefix="/api/v1")
@@ -36,6 +37,7 @@ class ProviderPayload(BaseModel):
     base_url: str | None = None
     models: list[str] = []
     enabled: bool = True
+    api_mode: str | None = None
 
 
 class ChatPayload(BaseModel):
@@ -52,6 +54,7 @@ def _sanitize_config(config: NexusClawConfig) -> dict:
             "base_url": p.base_url,
             "models": p.models,
             "enabled": p.enabled,
+            "api_mode": getattr(p, "api_mode", "openai-chat"),
         }
     return {
         "version": config.version,
@@ -69,21 +72,23 @@ async def get_config():
 
 @router.post("/config/provider")
 async def add_provider(payload: ProviderPayload):
-    """Add or update a provider."""
+    """Add or update a provider. Merges with existing config."""
     from nexusclaw.main import app_state
 
     config = app_state.config
     config_path = get_config_path()
 
+    # Merge with existing provider if it exists
+    existing = config.providers.get(payload.name)
     provider = ProviderConfig(
         name=payload.name,
-        api_key=payload.api_key,
-        base_url=payload.base_url,
-        models=payload.models,
-        enabled=payload.enabled,
+        api_key=payload.api_key if payload.api_key is not None else (existing.api_key if existing else None),
+        base_url=payload.base_url if payload.base_url is not None else (existing.base_url if existing else None),
+        models=payload.models if payload.models else (existing.models if existing else []),
+        enabled=payload.enabled if payload.enabled is not None else (existing.enabled if existing else True),
+        api_mode=payload.api_mode if payload.api_mode is not None else (existing.api_mode if existing else "openai-chat"),
     )
 
-    # Use name as both dict key and provider name
     patched = config.model_copy(deep=True)
     patched.providers[payload.name] = provider
 
@@ -143,7 +148,7 @@ async def chat_endpoint(payload: ChatPayload):
 
 @router.websocket("/stream/{workspace_id}")
 async def chat_stream(ws: WebSocket, workspace_id: str):
-    """SSE streaming chat."""
+    """SSE streaming chat. Saves messages to SQLite conversation store."""
     await ws.accept()
 
     try:
@@ -160,7 +165,20 @@ async def chat_stream(ws: WebSocket, workspace_id: str):
     if not model:
         model = app_state.config.default_model
 
-    await ws.send_json({"type": "start", "model": model})
+    # Auto-create conversation if none provided
+    if conversation_id:
+        conv = conversations.get_conversation(conversation_id)
+        if not conv:
+            conversation_id = None
+
+    if not conversation_id:
+        conv = conversations.create_conversation()
+        conversation_id = conv["id"]
+
+    # Save user message
+    conversations.add_message(conversation_id, "user", message, model)
+
+    await ws.send_json({"type": "start", "model": model, "conversation_id": conversation_id})
 
     messages = [{"role": "user", "content": message}]
     all_content = []
@@ -175,8 +193,14 @@ async def chat_stream(ws: WebSocket, workspace_id: str):
         await ws.send_json({"type": "error", "error": str(e)})
         return
 
+    assistant_content = "".join(all_content)
+
+    # Save assistant message
+    conversations.add_message(conversation_id, "assistant", assistant_content, model)
+
     await ws.send_json({
         "type": "done",
         "model": model,
-        "content": "".join(all_content),
+        "content": assistant_content,
+        "conversation_id": conversation_id,
     })
