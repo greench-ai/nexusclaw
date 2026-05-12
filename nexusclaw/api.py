@@ -141,7 +141,7 @@ async def chat_endpoint(payload: ChatPayload):
     return result
 
 
-@router.websocket("/chat/stream/{workspace_id}")
+@router.websocket("/stream/{workspace_id}")
 async def chat_stream(ws: WebSocket, workspace_id: str):
     """SSE streaming chat."""
     await ws.accept()

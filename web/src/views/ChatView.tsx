@@ -38,7 +38,7 @@ export default function ChatView() {
   function connectWS(message: string) {
     if (wsRef.current) wsRef.current.close();
 
-    const ws = new WebSocket(`ws://${window.location.host}/api/v1/chat/stream/default`);
+    const ws = new WebSocket(`ws://${window.location.host}/api/v1/stream/default`);
     wsRef.current = ws;
 
     ws.onopen = () => {
