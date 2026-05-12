@@ -1,6 +1,6 @@
 """
 Direct provider API calls — no LiteLLM.
-Each provider uses OpenAI-compatible chat completions API.
+Supports OpenAI Chat Completions and Anthropic Messages APIs.
 """
 
 from __future__ import annotations
@@ -15,33 +15,123 @@ from nexusclaw.config import NexusClawConfig, ProviderConfig
 
 log = logging.getLogger(__name__)
 
+# ── Provider defaults ─────────────────────────────────────────────────────────────
 
-def _get_auth_header(provider: ProviderConfig, model: str) -> dict[str, str]:
-    """Build auth headers for a provider."""
-    prefix = model.split("/")[0] if "/" in model else model
+DEFAULT_BASES = {
+    "openai":     "https://api.openai.com/v1",
+    "anthropic":  "https://api.anthropic.com/v1",
+    "ollama":     "http://localhost:11434/v1",
+    "deepseek":   "https://api.deepseek.com/v1",
+    "groq":       "https://api.groq.com/openai/v1",
+    "dashscope":  "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "openrouter": "https://openrouter.ai/api/v1",
+}
 
-    if provider.api_key:
-        return {"Authorization": f"Bearer {provider.api_key}"}
-    return {}
 
-
-def _build_base_url(provider: ProviderConfig, model: str) -> str:
-    """Get the base URL for a request."""
+def _base_url_for(provider: ProviderConfig, model: str) -> str:
     if provider.base_url:
         return provider.base_url.rstrip("/")
-    # Default OpenAI-compatible
-    prefix = model.split("/")[0] if "/" in model else model
-    bases = {
-        "openai": "https://api.openai.com",
-        "ollama": "http://localhost:11434",
-        "deepseek": "https://api.deepseek.com",
-        "groq": "https://api.groq.com/openai/v1",
-        "dashscope": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "openrouter": "https://openrouter.ai/api/v1",
-        "siliconflow": "https://api.siliconflow.cn/v1",
-    }
-    return bases.get(prefix, "https://api.openai.com")
+    prefix = model.split("/")[0] if "/" in model else provider.name
+    return DEFAULT_BASES.get(prefix, "https://api.openai.com/v1")
 
+
+def _auth_for(provider: ProviderConfig) -> dict[str, str]:
+    if not provider.api_key:
+        return {}
+    # Anthropic uses x-api-key header
+    if provider.api_mode == "anthropic-chat":
+        return {"x-api-key": provider.api_key}
+    return {"Authorization": f"Bearer {provider.api_key}"}
+
+
+# ── OpenAI Chat Completions ─────────────────────────────────────────────────────
+
+async def _openai_stream(
+    url: str,
+    headers: dict,
+    payload: dict,
+) -> AsyncIterator[dict]:
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        async with client.stream("POST", url, headers=headers, json=payload) as resp:
+            if resp.status_code != 200:
+                text = await resp.aread()
+                yield {"type": "error", "error": f"HTTP {resp.status_code}: {text[:200]}"}
+                return
+
+            async for line in resp.aiter_lines():
+                if not line.strip():
+                    continue
+                if line.startswith("data: "):
+                    line = line[6:]
+                if line == "[DONE]":
+                    break
+                try:
+                    data = json.loads(line)
+                    delta = data.get("choices", [{}])[0].get("delta", {})
+                    if content := delta.get("content"):
+                        yield {"type": "token", "content": content}
+                    if data.get("choices", [{}])[0].get("finish_reason") in ("stop", "length"):
+                        break
+                except json.JSONDecodeError:
+                    pass
+
+
+# ── Anthropic Messages API ───────────────────────────────────────────────────────
+
+async def _anthropic_stream(
+    url: str,
+    headers: dict,
+    payload: dict,
+) -> AsyncIterator[dict]:
+    # Convert OpenAI-style messages to Anthropic format
+    anthropic_messages = []
+    for msg in payload.get("messages", []):
+        role = msg["role"]
+        if role == "system":
+            # Prepend system to first user message
+            continue
+        anthropic_messages.append({
+            "role": "user" if role == "user" else "assistant",
+            "content": msg["content"],
+        })
+
+    anthropic_payload = {
+        "model": payload["model"],
+        "messages": anthropic_messages,
+        "stream": True,
+        "max_tokens": 4096,
+    }
+    if payload.get("system"):
+        # Put system in first user message
+        if anthropic_messages and anthropic_messages[0]["role"] == "user":
+            anthropic_messages[0]["content"] = f"{payload['system']}\n\n{anthropic_messages[0]['content']}"
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        async with client.stream("POST", url, headers=headers, json=anthropic_payload) as resp:
+            if resp.status_code != 200:
+                text = await resp.aread()
+                yield {"type": "error", "error": f"HTTP {resp.status_code}: {text[:200]}"}
+                return
+
+            async for line in resp.aiter_lines():
+                if not line.strip():
+                    continue
+                if line.startswith("data: "):
+                    line = line[6:]
+                if line == "[DONE]":
+                    break
+                try:
+                    data = json.loads(line)
+                    delta = data.get("delta", {})
+                    if content := delta.get("text"):
+                        yield {"type": "token", "content": content}
+                    if data.get("type") == "message_stop":
+                        break
+                except json.JSONDecodeError:
+                    pass
+
+
+# ── Public API ───────────────────────────────────────────────────────────────────
 
 async def stream_chat(
     config: NexusClawConfig,
@@ -52,63 +142,34 @@ async def stream_chat(
     Stream chat completion from the appropriate provider.
     Yields dicts: {"type": "token", "content": "..."} or {"type": "error", "error": "..."}
     """
-    provider_name = model.split("/")[0] if "/" in model else config.default_provider
-    provider = config.providers.get(provider_name)
+    # Resolve provider
+    prefix = model.split("/")[0] if "/" in model else model
+    provider = config.providers.get(prefix) or config.providers.get(config.default_provider)
 
     if not provider:
-        # Fall back to default
-        provider = config.providers.get(config.default_provider)
-        if not provider:
-            yield {"type": "error", "error": f"No provider configured for model '{model}'"}
-            return
+        yield {"type": "error", "error": f"No provider for model '{model}' — run 'nexusclaw onboard' first"}
+        return
 
-    base_url = _build_base_url(provider, model)
-    auth = _get_auth_header(provider, model)
+    base_url = _base_url_for(provider, model)
+    auth = _auth_for(provider)
+    actual_model = model.split("/")[-1] if "/" in model else model
 
-    # Determine actual model ID (strip provider prefix for provider-specific endpoints)
-    actual_model = model
-    # For OpenAI-compatible APIs, use the full model string as-is
+    if provider.api_mode == "anthropic-chat":
+        url = f"{base_url}/messages"
+        headers = {**auth, "Content-Type": "application/json",
+                   "anthropic-version": "2023-06-01",
+                   "anthropic-dangerous-direct-browser-access": "true"}
+        payload = {"model": actual_model, "messages": messages, "stream": True}
+        async for chunk in _anthropic_stream(url, headers, payload):
+            yield chunk
 
-    url = f"{base_url}/chat/completions"
-    headers = {**auth, "Content-Type": "application/json"}
-    if provider.api_key and "Authorization" not in auth:
-        headers["Authorization"] = f"Bearer {provider.api_key}"
-
-    payload = {
-        "model": actual_model,
-        "messages": messages,
-        "stream": True,
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            async with client.stream("POST", url, headers=headers, json=payload) as resp:
-                if resp.status_code != 200:
-                    text = await resp.aread()
-                    yield {"type": "error", "error": f"HTTP {resp.status_code}: {text[:200]}"}
-                    return
-
-                async for line in resp.aiter_lines():
-                    if not line.strip():
-                        continue
-                    if line.startswith("data: "):
-                        line = line[6:]
-                    if line == "[DONE]":
-                        break
-                    try:
-                        data = json.loads(line)
-                        delta = data.get("choices", [{}])[0].get("delta", {})
-                        if content := delta.get("content"):
-                            yield {"type": "token", "content": content}
-                        if data.get("choices", [{}])[0].get("finish_reason") in ("stop", "length"):
-                            break
-                    except json.JSONDecodeError:
-                        pass
-    except httpx.ConnectError:
-        yield {"type": "error", "error": f"Cannot connect to {base_url}. Is the server running?"}
-    except Exception as e:
-        log.exception("chat.error")
-        yield {"type": "error", "error": str(e)}
+    else:
+        # Default: OpenAI Chat Completions
+        url = f"{base_url}/chat/completions"
+        headers = {**auth, "Content-Type": "application/json"}
+        payload = {"model": actual_model, "messages": messages, "stream": True}
+        async for chunk in _openai_stream(url, headers, payload):
+            yield chunk
 
 
 async def chat(

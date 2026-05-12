@@ -19,6 +19,7 @@ class ProviderConfig:
     name: str
     api_key: str | None = None
     base_url: str | None = None
+    api_mode: str = "openai-chat"  # openai-chat | anthropic-chat | auto-detect
     models: list[str] = field(default_factory=list)
     enabled: bool = True
 
