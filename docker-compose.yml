@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  nexusclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: nexusclaw
+    restart: unless-stopped
+    ports:
+      - "14300:8000"
+    volumes:
+      - ~/.nexusclaw:/root/.nexusclaw
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # Ollama (optional local models)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: nexusclaw-ollama
+    restart: unless-stopped
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    profiles:
+      - local-ollama
+
+volumes:
+  ollama_data:

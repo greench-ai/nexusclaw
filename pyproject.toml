@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nexusclaw"
+version = "1.0.0"
+description = "NexusClaw — Direct provider AI chat. No LiteLLM."
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.0",
+    "rich>=13.0",
+    "pyyaml",
+]
+
+[project.scripts]
+nexusclaw = "nexusclaw.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nexusclaw*"]
