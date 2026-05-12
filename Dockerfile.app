@@ -10,7 +10,9 @@ RUN pip install --no-cache-dir \
     "uvicorn[standard]==0.34.0" httpx \
     python-multipart sse-starlette jinja2 \
     aiosqlite python-dotenv \
-    pydantic pyyaml structlog fastapi==0.115.0
+    pydantic pyyaml structlog fastapi==0.115.0 \
+    pypdf python-docx beautifulsoup4 lxml \
+    qdrant-client
 
 COPY nexusclaw/ ./nexusclaw/
 COPY web/dist/ ./web/dist/

@@ -11,6 +11,20 @@ dependencies = [
     "click>=8.0",
     "rich>=13.0",
     "pyyaml",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]==0.34.0",
+    "httpx",
+    "python-multipart",
+    "sse-starlette",
+    "pydantic",
+    "structlog",
+    "aiosqlite",
+    "python-dotenv",
+    "pypdf",
+    "python-docx",
+    "beautifulsoup4",
+    "lxml",
+    "qdrant-client",
 ]
 
 [project.scripts]

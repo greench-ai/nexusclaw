@@ -9,6 +9,7 @@ import ManagerView from "./views/ManagerView";
 import CollectionsView from "./views/CollectionsView";
 import GroupChatView from "./views/GroupChatView";
 import BrowserView from "./views/BrowserView";
+import RAGView from "./views/RAGView";
 import "./styles.css";
 
 const BORDER = "#1e1e28";
@@ -78,6 +79,7 @@ function NavBar() {
         { path: "/collections", label: "Collections" },
         { path: "/group-chat", label: "Group Chat" },
         { path: "/browser", label: "Browser" },
+        { path: "/rag", label: "RAG" },
       ].map(({ path, label }) => (
         <Link key={path} to={path} style={linkStyle(isActive(path))}>
           {label}
@@ -137,6 +139,7 @@ function App() {
           <Route path="/collections" element={<CollectionsView />} />
           <Route path="/group-chat" element={<GroupChatView />} />
           <Route path="/browser" element={<BrowserView />} />
+          <Route path="/rag" element={<RAGView />} />
           <Route path="/settings" element={<SettingsView />} />
 
           {/* Root */}
