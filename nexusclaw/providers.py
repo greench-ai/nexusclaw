@@ -84,16 +84,21 @@ async def _anthropic_stream(
     payload: dict,
 ) -> AsyncIterator[dict]:
     # Convert OpenAI-style messages to Anthropic format
+    system_content = payload.get("system", "")
     anthropic_messages = []
     for msg in payload.get("messages", []):
         role = msg["role"]
         if role == "system":
-            # Prepend system to first user message
+            system_content = msg["content"]
             continue
         anthropic_messages.append({
             "role": "user" if role == "user" else "assistant",
             "content": msg["content"],
         })
+
+    # Inject system prompt into first user message
+    if system_content and anthropic_messages and anthropic_messages[0]["role"] == "user":
+        anthropic_messages[0]["content"] = f"{system_content}\n\n{anthropic_messages[0]['content']}"
 
     anthropic_payload = {
         "model": payload["model"],
@@ -101,10 +106,6 @@ async def _anthropic_stream(
         "stream": True,
         "max_tokens": 4096,
     }
-    if payload.get("system"):
-        # Put system in first user message
-        if anthropic_messages and anthropic_messages[0]["role"] == "user":
-            anthropic_messages[0]["content"] = f"{payload['system']}\n\n{anthropic_messages[0]['content']}"
 
     async with httpx.AsyncClient(timeout=120.0) as client:
         async with client.stream("POST", url, headers=headers, json=anthropic_payload) as resp:

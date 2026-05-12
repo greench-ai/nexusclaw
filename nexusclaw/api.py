@@ -148,7 +148,7 @@ async def chat_endpoint(payload: ChatPayload):
 
 @router.websocket("/stream/{workspace_id}")
 async def chat_stream(ws: WebSocket, workspace_id: str):
-    """SSE streaming chat. Saves messages to SQLite conversation store."""
+    """SSE streaming chat. Saves messages to SQLite, auto-titles conversations."""
     await ws.accept()
 
     try:
@@ -159,6 +159,7 @@ async def chat_stream(ws: WebSocket, workspace_id: str):
     message = data.get("message", "")
     model = data.get("model")
     conversation_id = data.get("conversation_id")
+    use_rag = data.get("rag", False)
 
     from nexusclaw.main import app_state
 
@@ -175,12 +176,41 @@ async def chat_stream(ws: WebSocket, workspace_id: str):
         conv = conversations.create_conversation()
         conversation_id = conv["id"]
 
+    # Auto-generate title if still "New conversation"
+    conv = conversations.get_conversation(conversation_id)
+    if conv and conv["title"] == "New conversation" and message.strip():
+        title = conversations.generate_title(message)
+        conversations.update_conversation_title(conversation_id, title)
+
     # Save user message
     conversations.add_message(conversation_id, "user", message, model)
 
     await ws.send_json({"type": "start", "model": model, "conversation_id": conversation_id})
 
+    # Build messages — optionally with RAG context
     messages = [{"role": "user", "content": message}]
+
+    if use_rag:
+        try:
+            from nexusclaw.rag import search_chunks
+            chunks = await search_chunks(message, top_k=5)
+            if chunks:
+                context_parts = []
+                for c in chunks:
+                    context_parts.append(
+                        f"[Document: {c['doc_title']}]\n{c['text']}"
+                    )
+                context = "\n\n---\n\n".join(context_parts)
+                system_prompt = (
+                    "You have access to the following documents. Use them to answer "
+                    "the user's question. If the documents don't contain the answer, say so.\n\n"
+                    + context
+                )
+                messages = [{"role": "system", "content": system_prompt},
+                            {"role": "user", "content": message}]
+        except Exception as e:
+            log.warning("rag.context_injection_failed", error=str(e))
+
     all_content = []
 
     try:

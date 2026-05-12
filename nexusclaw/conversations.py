@@ -148,6 +148,18 @@ def update_conversation_title(conv_id: str, title: str) -> dict[str, Any] | None
     return dict(row) if row else None
 
 
+def generate_title(message: str) -> str:
+    """Generate a short title from the first user message. Called by the WebSocket handler."""
+    # Quick heuristic: use first 5-7 words, capitalize
+    words = message.strip().split()
+    if not words:
+        return "New conversation"
+    title = " ".join(words[:6])
+    if len(message.strip()) > 60:
+        title += "…"
+    return title[:80]
+
+
 def delete_conversation(conv_id: str) -> bool:
     conn = _get_db()
     cur = conn.execute("DELETE FROM conversations WHERE id = ?", (conv_id,))
