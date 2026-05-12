@@ -7,10 +7,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     && rm -rf /var/lib/apt/lists/
 
 RUN pip install --no-cache-dir \
-    fastapi uvicorn httpx \
+    "uvicorn[standard]==0.34.0" httpx \
     python-multipart sse-starlette jinja2 \
     aiosqlite python-dotenv \
-    pydantic pyyaml structlog
+    pydantic pyyaml structlog fastapi==0.115.0
 
 COPY nexusclaw/ ./nexusclaw/
 COPY web/dist/ ./web/dist/

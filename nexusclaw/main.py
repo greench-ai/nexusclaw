@@ -9,9 +9,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import structlog
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
+from fastapi.responses import FileResponse
 
 from nexusclaw.api import router as api_router
 from nexusclaw.config import get_config_path, load_config
@@ -68,11 +68,21 @@ def create_app() -> FastAPI:
         async def serve_chat():
             return FileResponse(web_dist / "index.html")
 
-        # SPA fallback — single-level paths only (no slashes)
-        # This prevents matching /api/* which must be handled by WebSocket/HTTP routes
+        # Serve known SPA paths explicitly
+        for spa_path in ["browser", "manager", "settings", "memory", "skills",
+                          "collections", "agents", "group-chat", "brain"]:
+            @app.get(f"/{spa_path}")
+            async def serve_spa_named(path=spa_path):
+                return FileResponse(web_dist / "index.html")
+
+        # Final SPA fallback — must NOT match /api/* paths
+        # /{path} with no slash only matches single-segment paths
         @app.get("/{path}")
-        async def serve_spa_single(path: str):
+        async def serve_spa_fallback(path: str):
             if "/" in path:
+                # Multi-segment path like api/v1/stream — shouldn't happen but
+                # returning 404 lets WebSocket upgrade proceed
+                from starlette.responses import Response
                 return Response(status_code=404)
             file_path = web_dist / path
             if file_path.exists() and file_path.is_file():
