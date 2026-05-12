@@ -206,6 +206,61 @@ export default function ChatView() {
     connectWS(text);
   }
 
+  async function runAsAgent() {
+    if (!input.trim() || isStreaming) return;
+    const text = input.trim();
+    setInput("");
+    setError(null);
+    setMessages((msgs) => [...msgs, { role: "user", content: `[Agent] ${text}` }]);
+    setIsStreaming(true);
+
+    try {
+      // Create agent session
+      const res = await fetch("/api/v1/agents/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ task: text }),
+      });
+      if (!res.ok) throw new Error("Failed to create agent session");
+      const session = await res.json();
+
+      // Connect to agent stream
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const ws = new WebSocket(`${wsProtocol}//${window.location.host}/api/v1/agents/stream/${session.id}`);
+      let responseText = "";
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "token") {
+          responseText += data.content;
+          setMessages((msgs) => {
+            const last = msgs[msgs.length - 1];
+            if (last?.role === "assistant") {
+              return [...msgs.slice(0, -1), { ...last, content: last.content + data.content }];
+            }
+            return [...msgs, { role: "assistant", content: data.content }];
+          });
+        }
+        if (data.type === "tool_call") {
+          setMessages((msgs) => [
+            ...msgs,
+            { role: "assistant", content: `[Tool: ${data.tool}]` },
+          ]);
+        }
+        if (data.type === "done" || data.type === "error") {
+          ws.close();
+          setIsStreaming(false);
+        }
+      };
+
+      ws.onerror = () => { setIsStreaming(false); };
+      ws.onclose = () => { setIsStreaming(false); };
+    } catch (err: any) {
+      setError(err.message);
+      setIsStreaming(false);
+    }
+  }
+
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -465,6 +520,15 @@ export default function ChatView() {
             style={{ flexShrink: 0, width: 40, height: 40, border: "none", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: input.trim() && !isStreaming && currentModel ? ACCENT : SURFACE, color: input.trim() && !isStreaming && currentModel ? "#000" : TEXT2, cursor: input.trim() && !isStreaming && currentModel ? "pointer" : "not-allowed", transition: "all 150ms" }}
           >
             <Send size={15} />
+          </button>
+          <button
+            onClick={runAsAgent}
+            disabled={!input.trim() || isStreaming}
+            title="Run as Agent"
+            style={{ flexShrink: 0, height: 40, padding: "0 10px", border: `1px solid ${isStreaming || !input.trim() ? BORDER : ORANGE}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", background: SURFACE, color: isStreaming || !input.trim() ? TEXT2 : ORANGE, cursor: isStreaming || !input.trim() ? "not-allowed" : "pointer", transition: "all 150ms", fontSize: 12, fontFamily: "'Space Grotesk', system-ui, sans-serif", gap: 5 }}
+          >
+            <span style={{ fontSize: 14 }}>⚡</span>
+            <span>Agent</span>
           </button>
         </div>
       </div>
