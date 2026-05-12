@@ -18,6 +18,7 @@ from nexusclaw.api_conversations import router as conversations_router
 from nexusclaw.api_brain import router as brain_router
 from nexusclaw.api_skills import router as skills_router
 from nexusclaw.api_rag import router as rag_router
+from nexusclaw.api_prompts import router as prompts_router
 from nexusclaw.config import get_config_path, load_config
 
 log = structlog.get_logger(__name__)
@@ -47,6 +48,7 @@ def create_app() -> FastAPI:
     app.include_router(brain_router)
     app.include_router(skills_router)
     app.include_router(rag_router)
+    app.include_router(prompts_router)
 
     @app.get("/health")
     async def health():
