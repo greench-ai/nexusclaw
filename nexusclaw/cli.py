@@ -496,7 +496,6 @@ def _onboard_inner():
         "    untrusted inboxes.\n\n"
         "[dim]Run regularly: nexusclaw security audit --deep[/dim]",
         border_style="red",
-        expand=False,
     ))
     console.print()
 
@@ -528,7 +527,6 @@ def _onboard_inner():
             f"gateway.bind: [dim]{gateway_bind}[/dim]",
             title="Detected",
             border_style="yellow",
-            expand=False,
         ))
         console.print()
         console.print("[bold]Config handling[/bold]")
@@ -551,7 +549,6 @@ def _quickstart_flow(config: dict):
         "Keeping your current gateway settings.\n"
         "Just configuring the model and search provider.",
         border_style="green",
-        expand=False,
     ))
     console.print()
 
@@ -756,7 +753,6 @@ def _ask_websearch(config: dict):
         "Choose a provider and paste your API key.\n"
         "[dim]Docs: https://docs.openclaw.ai/tools/web[/dim]",
         border_style="blue",
-        expand=False,
     ))
     console.print()
 
