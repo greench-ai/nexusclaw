@@ -155,7 +155,7 @@ async def stream_chat(
     actual_model = model.split("/")[-1] if "/" in model else model
 
     if provider.api_mode == "anthropic-chat":
-        url = f"{base_url}/messages"
+        url = f"{base_url}/v1/messages"
         headers = {**auth, "Content-Type": "application/json",
                    "anthropic-version": "2023-06-01",
                    "anthropic-dangerous-direct-browser-access": "true"}
