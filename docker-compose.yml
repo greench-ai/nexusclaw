@@ -18,6 +18,17 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
 
+  # Qdrant vector database (required for RAG)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: nexusclaw-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/root/qdrant/storage
+
   # Ollama (optional local models)
   ollama:
     image: ollama/ollama:latest
@@ -31,4 +42,5 @@ services:
       - local-ollama
 
 volumes:
+  qdrant_data:
   ollama_data:
