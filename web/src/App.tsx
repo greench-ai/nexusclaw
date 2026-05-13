@@ -124,10 +124,13 @@ function App() {
     );
   }
 
+  const location = useLocation();
+  const isChat = location.pathname === "/chat";
+
   return (
     <BrowserRouter>
       <div style={{ minHeight: "100vh", background: BG }}>
-        <NavBar />
+        {!isChat && <NavBar />}
         <Routes>
           <Route path="/setup" element={<SetupView />} />
 
