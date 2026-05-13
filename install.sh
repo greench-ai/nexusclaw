@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────────────────────
-# NexusClaw Installer  |  curl -fsSL https://nexusclaw.ai/install.sh | bash
+# NexusClaw Installer  |  curl -fsSL https://raw.githubusercontent.com/greench-ai/nexusclaw/main/install.sh | bash
 # ─────────────────────────────────────────────────────────────────────────────
 set -e
 
