@@ -154,18 +154,21 @@ function selectProvider(prov) {
 
   // Update provider buttons
   document.querySelectorAll("#providers button").forEach((btn, idx) => {
+    if (!PROVIDERS[idx]) return;
     const isSelected = PROVIDERS[idx].id === prov.id;
     btn.style.background = isSelected ? "rgba(0,255,136,0.06)" : "var(--surface-1)";
     btn.style.borderColor = isSelected ? "var(--green)" : "var(--border)";
     btn.querySelector("span:first-child").style.color = isSelected ? "var(--green)" : "var(--text-3)";
-    // Replace/check mark
+    // Replace/check mark — only buttons with idx===0 have a last-child span
     const lastSpan = btn.querySelector("span:last-child");
-    if (isSelected && lastSpan.textContent !== "✓") {
-      lastSpan.textContent = "✓";
-      lastSpan.style.color = "var(--green)";
-      lastSpan.style.fontSize = "18px";
-    } else if (!isSelected && lastSpan.textContent === "✓") {
-      lastSpan.textContent = "";
+    if (lastSpan) {
+      if (isSelected && lastSpan.textContent !== "✓") {
+        lastSpan.textContent = "✓";
+        lastSpan.style.color = "var(--green)";
+        lastSpan.style.fontSize = "18px";
+      } else if (!isSelected && lastSpan.textContent === "✓") {
+        lastSpan.textContent = "";
+      }
     }
   });
 
