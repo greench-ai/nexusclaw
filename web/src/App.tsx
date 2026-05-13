@@ -107,6 +107,10 @@ function App() {
       .catch(() => setHasConfig(false));
   }, []);
 
+  // Call useLocation unconditionally — hooks must fire before any early returns
+  const location = useLocation();
+  const isChat = location.pathname === "/chat";
+
   if (hasConfig === null) {
     return (
       <div style={{
@@ -123,9 +127,6 @@ function App() {
       </div>
     );
   }
-
-  const location = useLocation();
-  const isChat = location.pathname === "/chat";
 
   return (
     <BrowserRouter>
