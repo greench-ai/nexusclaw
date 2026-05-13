@@ -18,18 +18,9 @@ const TEXT = "#f0f0f0";
 const TEXT2 = "#6b6b7b";
 const ACCENT = "#00ff88";
 const BG = "#0a0a0a";
-const SURFACE = "#111118";
 
 function NavBar() {
   const location = useLocation();
-  const [config, setConfig] = useState<any>(null);
-
-  useEffect(() => {
-    fetch("/api/v1/config")
-      .then((r) => r.json())
-      .then(setConfig)
-      .catch(() => {});
-  }, []);
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -97,6 +88,30 @@ function NavBar() {
   );
 }
 
+// useLocation must be called INSIDE BrowserRouter — not in App
+function AppRoutes({ isChat }: { isChat: boolean }) {
+  return (
+    <>
+      {!isChat && <NavBar />}
+      <Routes>
+        <Route path="/setup" element={<SetupView />} />
+        <Route path="/chat" element={<ChatView />} />
+        <Route path="/brain" element={<BrainView />} />
+        <Route path="/skills" element={<SkillsView />} />
+        <Route path="/manager" element={<ManagerView />} />
+        <Route path="/collections" element={<CollectionsView />} />
+        <Route path="/group-chat" element={<GroupChatView />} />
+        <Route path="/browser" element={<BrowserView />} />
+        <Route path="/rag" element={<RAGView />} />
+        <Route path="/prompts" element={<PromptsView />} />
+        <Route path="/settings" element={<SettingsView />} />
+        <Route path="/" element={<Navigate to="/chat" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  );
+}
+
 function App() {
   const [hasConfig, setHasConfig] = useState<boolean | null>(null);
 
@@ -106,10 +121,6 @@ function App() {
       .then((ok) => setHasConfig(ok))
       .catch(() => setHasConfig(false));
   }, []);
-
-  // Call useLocation unconditionally — hooks must fire before any early returns
-  const location = useLocation();
-  const isChat = location.pathname === "/chat";
 
   if (hasConfig === null) {
     return (
@@ -130,35 +141,21 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div style={{ minHeight: "100vh", background: BG }}>
-        {!isChat && <NavBar />}
-        <Routes>
-          <Route path="/setup" element={<SetupView />} />
-
-          {/* Full-height views (own layout) */}
-          <Route path="/chat" element={<ChatView />} />
-
-          {/* Standard views (nav bar + content) */}
-          <Route path="/brain" element={<BrainView />} />
-          <Route path="/skills" element={<SkillsView />} />
-          <Route path="/manager" element={<ManagerView />} />
-          <Route path="/collections" element={<CollectionsView />} />
-          <Route path="/group-chat" element={<GroupChatView />} />
-          <Route path="/browser" element={<BrowserView />} />
-          <Route path="/rag" element={<RAGView />} />
-          <Route path="/prompts" element={<PromptsView />} />
-          <Route path="/settings" element={<SettingsView />} />
-
-          {/* Root */}
-          <Route
-            path="/"
-            element={hasConfig ? <Navigate to="/chat" replace /> : <Navigate to="/setup" replace />}
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+      <AppContent hasConfig={hasConfig} />
     </BrowserRouter>
   );
+}
+
+// AppContent is inside BrowserRouter — so useLocation works here
+function AppContent({ hasConfig }: { hasConfig: boolean }) {
+  const location = useLocation();
+  const isChat = location.pathname === "/chat";
+
+  if (!hasConfig) {
+    return <Navigate to="/setup" replace />;
+  }
+
+  return <AppRoutes isChat={isChat} />;
 }
 
 export default App;
