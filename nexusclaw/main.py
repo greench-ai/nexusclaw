@@ -13,6 +13,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
+def _no_cache_response(path):
+    """FileResponse with no-cache headers — for HTML that must not be cached."""
+    r = FileResponse(path)
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    return r
+
 from nexusclaw.api import router as api_router
 from nexusclaw.api_conversations import router as conversations_router
 from nexusclaw.api_brain import router as brain_router
@@ -76,18 +84,18 @@ def create_app() -> FastAPI:
 
         @app.get("/")
         async def serve_index():
-            return FileResponse(web_dist / "index.html")
+            return _no_cache_response(web_dist / "index.html")
 
         @app.get("/chat")
         async def serve_chat():
-            return FileResponse(web_dist / "index.html")
+            return _no_cache_response(web_dist / "index.html")
 
         # Serve known SPA paths explicitly
         for spa_path in ["browser", "manager", "settings", "memory", "skills",
                           "collections", "agents", "group-chat", "brain"]:
             @app.get(f"/{spa_path}")
             async def serve_spa_named(path=spa_path):
-                return FileResponse(web_dist / "index.html")
+                return _no_cache_response(web_dist / "index.html")
 
         # Final SPA fallback — must NOT match /api/* paths
         # /{path} with no slash only matches single-segment paths
@@ -101,7 +109,7 @@ def create_app() -> FastAPI:
             file_path = web_dist / path
             if file_path.exists() and file_path.is_file():
                 return FileResponse(file_path)
-            return FileResponse(web_dist / "index.html")
+            return _no_cache_response(web_dist / "index.html")
 
     return app
 
