@@ -61,22 +61,43 @@ log "Building Docker image..."
 docker build -f Dockerfile.app -t nexusclaw:latest . 2>&1 | tail -3
 ok "Docker image built"
 
-# ── Start services ────────────────────────────────────────────────────────
+# ── Start Qdrant (required for RAG) ─────────────────────────────────────
+log "Starting Qdrant vector database..."
+docker run -d \
+  --name nexusclaw-qdrant \
+  -p 6333:6333 \
+  -p 6334:6334 \
+  -v "$HOME/nexusclaw-qdrant:/root/qdrant/storage" \
+  --restart unless-stopped \
+  qdrant/qdrant:latest 2>/dev/null || \
+  docker start nexusclaw-qdrant 2>/dev/null || true
+ok "Qdrant running at localhost:6333"
+
+# ── Start NexusClaw API server ──────────────────────────────────────────────
 log "Starting NexusClaw..."
 docker run -d \
   --name nexusclaw \
   -p 14300:8000 \
   -v "$HOME/.nexusclaw:/root/.nexusclaw" \
   --restart unless-stopped \
+  --add-host=host.docker.internal:host-gateway \
   nexusclaw:latest 2>/dev/null || \
   docker start nexusclaw 2>/dev/null || true
+ok "NexusClaw API running at localhost:14300"
 
 # Wait for server
-sleep 3
+sleep 5
 if curl -sf http://localhost:14300/health &>/dev/null; then
   ok "NexusClaw is running at http://localhost:14300"
 else
   warn "Server may need a moment — check http://localhost:14300"
+fi
+
+# Verify Qdrant
+if curl -sf http://localhost:6333/readyz &>/dev/null; then
+  ok "Qdrant ready at localhost:6333"
+else
+  warn "Qdrant may need a moment — it's optional for basic chat"
 fi
 
 # ── Onboarding ────────────────────────────────────────────────────────────
