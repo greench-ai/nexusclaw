@@ -59,6 +59,9 @@ class ToolRegistry:
     def has_tool(self, name: str) -> bool:
         return name in self._tools
 
+    def list_tool_names(self) -> list[str]:
+        return list(self._tools.keys())
+
 
 GLOBAL_REGISTRY = ToolRegistry()
 
@@ -174,18 +177,18 @@ def wikipedia(topic: str) -> ToolResult:
 
 @tool(
     name="bash",
-    description="Execute a shell command on the host. Use for file operations, git, code execution.",
+    description="Execute a shell command inside the Docker container. Use for Docker operations, internal app commands.",
     input_schema={
         "type": "object",
         "properties": {
-            "command": {"type": "string", "description": "Shell command to execute"},
+            "command": {"type": "string", "description": "Shell command to execute inside container"},
             "timeout": {"type": "integer", "description": "Timeout in seconds (default 30)"}
         },
         "required": ["command"]
     }
 )
 def bash(command: str, timeout: int = 30) -> ToolResult:
-    """Execute a shell command."""
+    """Execute a shell command in Docker container context."""
     import subprocess
     try:
         result = subprocess.run(
@@ -196,6 +199,45 @@ def bash(command: str, timeout: int = 30) -> ToolResult:
         if result.returncode != 0 and not output:
             return ToolResult(success=False, output="", error=err or f"Exit code: {result.returncode}")
         return ToolResult(success=True, output=(output + ("\n[stderr]: " + err if err else "")), error=None)
+    except subprocess.TimeoutExpired:
+        return ToolResult(success=False, output="", error=f"Command timed out after {timeout}s")
+    except Exception as e:
+        return ToolResult(success=False, output="", error=str(e))
+
+
+@tool(
+    name="host_bash",
+    description="Execute a shell command on the WSL2/Linux host machine (not inside Docker). Use for file operations on the host filesystem like /home/greench/, git operations, npm, docker commands on host, etc.",
+    input_schema={
+        "type": "object",
+        "properties": {
+            "command": {"type": "string", "description": "Shell command to run on the host machine"},
+            "timeout": {"type": "integer", "description": "Timeout in seconds (default 30)"}
+        },
+        "required": ["command"]
+    }
+)
+def host_bash(command: str, timeout: int = 30) -> ToolResult:
+    """Execute a shell command on the WSL2/Linux host.
+
+    Docker containers have their own filesystem. This runs commands
+    on the WSL2 host where the actual files live at /home/greench/.
+    """
+    import subprocess
+    try:
+        # Use `wsl -e bash -c` to run on the WSL2 host
+        # This works whether we are in a Docker container or native Linux
+        result = subprocess.run(
+            ["wsl", "-e", "bash", "-c", command],
+            capture_output=True, text=True, timeout=timeout
+        )
+        output = result.stdout[:5000] if result.stdout else ""
+        err = result.stderr[:1000] if result.stderr else ""
+        if result.returncode != 0 and not output:
+            return ToolResult(success=False, output="", error=err or f"Exit code: {result.returncode}")
+        return ToolResult(success=True, output=(output + ("\n[stderr]: " + err if err else "")), error=None)
+    except FileNotFoundError:
+        return ToolResult(success=False, output="", error="wsl command not found — is this running on Windows with WSL2?")
     except subprocess.TimeoutExpired:
         return ToolResult(success=False, output="", error=f"Command timed out after {timeout}s")
     except Exception as e:
