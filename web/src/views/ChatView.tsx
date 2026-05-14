@@ -228,25 +228,63 @@ export default function ChatView() {
       const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const ws = new WebSocket(`${wsProtocol}//${window.location.host}/api/v1/agents/stream/${session.id}`);
       let responseText = "";
+      let currentThinking = "";
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === "token") {
-          responseText += data.content;
+
+        if (data.type === "reasoning") {
+          // Show what the agent is thinking
+          currentThinking += (currentThinking ? " " : "") + data.content;
           setMessages((msgs) => {
             const last = msgs[msgs.length - 1];
+            if (last?.role === "assistant") {
+              return [...msgs.slice(0, -1), { ...last, content: last.content }];
+            }
+            return msgs;
+          });
+          // Show thinking as a subtle indicator
+          setMessages((msgs) => {
+            const last = msgs[msgs.length - 1];
+            const thinkingLine = `🤔 ${currentThinking}`;
+            if (last?.role === "assistant" && last.content.startsWith("🤔")) {
+              return [...msgs.slice(0, -1), { ...last, content: thinkingLine }];
+            }
+            return [...msgs, { role: "assistant", content: thinkingLine }];
+          });
+        }
+
+        if (data.type === "token") {
+          // Final answer tokens — if last msg is thinking, replace it; otherwise append
+          setMessages((msgs) => {
+            const last = msgs[msgs.length - 1];
+            if (last?.role === "assistant" && last.content.startsWith("🤔")) {
+              return [...msgs.slice(0, -1), { ...last, content: data.content }];
+            }
             if (last?.role === "assistant") {
               return [...msgs.slice(0, -1), { ...last, content: last.content + data.content }];
             }
             return [...msgs, { role: "assistant", content: data.content }];
           });
         }
+
         if (data.type === "tool_call") {
+          // Show tool being called
           setMessages((msgs) => [
             ...msgs,
-            { role: "assistant", content: `[Tool: ${data.tool}]` },
+            { role: "assistant", content: `[⚡ ${data.tool}] ${JSON.stringify(data.input || {})}`.slice(0, 200) },
           ]);
         }
+
+        if (data.type === "tool_result") {
+          // Show tool result
+          const result = data.error || data.output;
+          setMessages((msgs) => [
+            ...msgs,
+            { role: "assistant", content: `[result] ${result}`.slice(0, 500) },
+          ]);
+        }
+
         if (data.type === "done" || data.type === "error") {
           ws.close();
           setIsStreaming(false);
